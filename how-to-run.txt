@@ -1,0 +1,89 @@
+# FeedbackSys - Panduan Menjalankan Proyek
+
+Proyek ini terdiri dari dua bagian utama:
+1. **Backend**: Python (Django REST Framework)
+2. **Frontend**: Javascript (React / Vite)
+
+Berikut adalah langkah-langkah untuk menyiapkan dan menjalankan proyek ini di mesin lokal Anda.
+
+---
+
+## 1. Setup Backend (Django)
+
+Buka terminal dan arahkan ke direktori root proyek ini, kemudian jalankan langkah-langkah berikut:
+
+1. **Masuk ke direktori backend**
+   ```bash
+   cd backend
+   ```
+
+2. **Buat dan Aktifkan Virtual Environment**
+   - Windows:
+     ```bash
+     python -m venv venv
+     .\venv\Scripts\activate
+     ```
+   - macOS / Linux:
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
+
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Jalankan Migrasi Database**
+   Perintah ini akan membuat file `db.sqlite3` dan menyiapkan semua tabel yang diperlukan.
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+
+5. **Masukkan Data Awal (Seed Data) & Buat Akun Default**
+   Proyek ini dilengkapi dengan skrip untuk membuat data program awal dan beberapa user dengan peran berbeda (Manager, Staff Operational, Staff Lapangan, Penerima Manfaat).
+   ```bash
+   python manage.py seed_data
+   ```
+   *Catatan: Akun default yang dibuat dapat dilihat di file `backend/users/management/commands/seed_data.py`. Password default untuk akun yang di-seed biasanya `Password123!`.*
+
+6. **Jalankan Server Backend**
+   ```bash
+   python manage.py runserver
+   ```
+   Server backend akan berjalan di `http://127.0.0.1:8000/`. Biarkan terminal ini tetap terbuka.
+
+---
+
+## 2. Setup Frontend (React / Vite)
+
+Buka **terminal baru** (biarkan terminal backend tetap berjalan), lalu ikuti langkah-langkah berikut:
+
+1. **Masuk ke direktori frontend**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install Dependencies NPM**
+   Pastikan Anda sudah menginstal Node.js di sistem Anda.
+   ```bash
+   npm install
+   ```
+
+3. **Jalankan Server Frontend (Development Mode)**
+   ```bash
+   npm run dev
+   ```
+   Aplikasi frontend akan berjalan di `http://localhost:5173/`. 
+
+---
+
+## 3. Akses Aplikasi
+
+1. Buka browser Anda dan kunjungi `http://localhost:5173/`.
+2. Anda akan diarahkan ke halaman login.
+3. Anda dapat masuk menggunakan salah satu akun yang dibuat oleh skrip `seed_data`. Contoh akun:
+   - **Username:** `manager01`
+   - **Password:** `Password123!`
+4. Selamat mencoba FeedbackSys!
