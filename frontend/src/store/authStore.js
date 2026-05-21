@@ -5,8 +5,8 @@ const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async (username, password) => {
-    const res = await api.post('/users/login/', { username, password });
+  login: async (username, password, rememberMe = false) => {
+    const res = await api.post('/users/login/', { username, password, remember_me: rememberMe });
     if (res.data) {
       await useAuthStore.getState().fetchUser();
     }

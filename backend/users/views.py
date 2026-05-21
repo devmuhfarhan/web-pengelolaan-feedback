@@ -1,12 +1,13 @@
 from django.conf import settings
+from datetime import datetime, timedelta
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
-from .serializers import UserSerializer
+from .serializers import UserSerializer, RegisterSerializer
 
 class CookieTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -15,10 +16,22 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             access_token = response.data.get('access')
             refresh_token = response.data.get('refresh')
             
+            remember_me = request.data.get('remember_me', False)
+            if remember_me:
+                access_max_age = 30 * 24 * 60 * 60 # 30 days
+                refresh_max_age = 30 * 24 * 60 * 60
+                access_expires = datetime.now() + timedelta(days=30)
+                refresh_expires = datetime.now() + timedelta(days=30)
+            else:
+                access_max_age = None
+                refresh_max_age = None
+                access_expires = datetime.now() + settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME']
+                refresh_expires = datetime.now() + settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME']
+            
             response.set_cookie(
                 key=settings.SIMPLE_JWT['AUTH_COOKIE'],
                 value=access_token,
-                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                expires=access_expires,
                 secure=False, # Set True in production
                 httponly=True,
                 samesite='Lax'
@@ -26,7 +39,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             response.set_cookie(
                 key='refresh_token',
                 value=refresh_token,
-                expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                expires=refresh_expires,
                 secure=False,
                 httponly=True,
                 samesite='Lax'
@@ -83,3 +96,14 @@ class CurrentUserView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+class RegisterView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(request=RegisterSerializer, responses={201: UserSerializer})
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

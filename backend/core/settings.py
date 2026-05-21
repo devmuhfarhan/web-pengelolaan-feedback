@@ -88,12 +88,8 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'db_pengelolaan_feedback',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -157,8 +153,8 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Feedback Monitoring API',
-    'DESCRIPTION': 'API documentation for Sistem Monitoring dan Pengelolaan Feedback',
+    'TITLE': 'Stewardship Portal API',
+    'DESCRIPTION': 'API documentation for Stewardship Portal',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }

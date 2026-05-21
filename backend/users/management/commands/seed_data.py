@@ -11,7 +11,7 @@ USERS = [
     {
         'username': 'manager01',
         'password': 'Password123!',
-        'email': 'manager01@feedbacksys.id',
+        'email': 'manager01@stewardship.id',
         'first_name': 'Budi',
         'last_name': 'Santoso',
         'role': 'MANAGER',
@@ -20,7 +20,7 @@ USERS = [
     {
         'username': 'staff_lapangan01',
         'password': 'Password123!',
-        'email': 'lapangan01@feedbacksys.id',
+        'email': 'lapangan01@stewardship.id',
         'first_name': 'Agus',
         'last_name': 'Prasetyo',
         'role': 'STAFF_LAPANGAN',
@@ -29,7 +29,7 @@ USERS = [
     {
         'username': 'staff_lapangan02',
         'password': 'Password123!',
-        'email': 'lapangan02@feedbacksys.id',
+        'email': 'lapangan02@stewardship.id',
         'first_name': 'Rina',
         'last_name': 'Wulandari',
         'role': 'STAFF_LAPANGAN',
@@ -38,7 +38,7 @@ USERS = [
     {
         'username': 'staff_ops01',
         'password': 'Password123!',
-        'email': 'ops01@feedbacksys.id',
+        'email': 'ops01@stewardship.id',
         'first_name': 'Dewi',
         'last_name': 'Kurniasari',
         'role': 'STAFF_OPERATIONAL',
@@ -47,7 +47,7 @@ USERS = [
     {
         'username': 'penerima01',
         'password': 'Password123!',
-        'email': 'penerima01@feedbacksys.id',
+        'email': 'penerima01@stewardship.id',
         'first_name': 'Siti',
         'last_name': 'Aminah',
         'role': 'PENERIMA_MANFAAT',
@@ -56,7 +56,7 @@ USERS = [
     {
         'username': 'penerima02',
         'password': 'Password123!',
-        'email': 'penerima02@feedbacksys.id',
+        'email': 'penerima02@stewardship.id',
         'first_name': 'Joko',
         'last_name': 'Widodo',
         'role': 'PENERIMA_MANFAAT',
@@ -65,7 +65,7 @@ USERS = [
     {
         'username': 'penerima03',
         'password': 'Password123!',
-        'email': 'penerima03@feedbacksys.id',
+        'email': 'penerima03@stewardship.id',
         'first_name': 'Hana',
         'last_name': 'Pertiwi',
         'role': 'PENERIMA_MANFAAT',

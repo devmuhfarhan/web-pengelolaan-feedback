@@ -1,4 +1,4 @@
-# FeedbackSys - Panduan Menjalankan Proyek
+# Stewardship Portal - Panduan Menjalankan Proyek
 
 Proyek ini terdiri dari dua bagian utama:
 1. **Backend**: Python (Django REST Framework)
@@ -86,4 +86,4 @@ Buka **terminal baru** (biarkan terminal backend tetap berjalan), lalu ikuti lan
 3. Anda dapat masuk menggunakan salah satu akun yang dibuat oleh skrip `seed_data`. Contoh akun:
    - **Username:** `manager01`
    - **Password:** `Password123!`
-4. Selamat mencoba FeedbackSys!
+4. Selamat mencoba Stewardship Portal!

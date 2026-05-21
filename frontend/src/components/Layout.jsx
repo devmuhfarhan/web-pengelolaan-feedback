@@ -11,7 +11,7 @@ import {
   LogOut,
   FileText,
   MessageSquare,
-  Hexagon,
+  Leaf,
 } from "lucide-react";
 import {
   Sidebar,
@@ -82,12 +82,17 @@ const Layout = () => {
         >
           <SidebarHeader className="p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-2 rounded-xl text-primary">
-                <Hexagon className="w-6 h-6 fill-primary/20" />
+              <div className="bg-primary p-2 rounded-xl text-primary-foreground shadow-sm">
+                <Leaf className="w-6 h-6 fill-white/20" />
               </div>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-                FeedbackSys
-              </h2>
+              <div className="flex flex-col">
+                <h2 className="text-xl font-extrabold text-primary tracking-tight leading-none">
+                  Stewardship
+                </h2>
+                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                  Portal
+                </h3>
+              </div>
             </div>
           </SidebarHeader>
           <SidebarContent className="px-4">
@@ -104,14 +109,15 @@ const Layout = () => {
                         <SidebarMenuButton
                           asChild
                           isActive={isActive}
-                          className={`transition-all duration-200 py-3 ${isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"}`}
+                          className={`transition-all duration-200 py-3 relative overflow-hidden ${isActive ? "bg-primary/10 text-primary font-bold hover:bg-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"}`}
                         >
                           <Link
                             to={item.path}
-                            className="flex items-center gap-3 font-medium w-full h-full"
+                            className="flex items-center gap-3 w-full h-full"
                           >
+                            {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />}
                             <item.icon
-                              className={`w-5 h-5 ${isActive ? "text-primary-foreground" : "text-slate-400 group-hover:text-primary"}`}
+                              className={`w-5 h-5 ml-1 ${isActive ? "text-primary" : "text-slate-400 group-hover:text-primary"}`}
                             />
                             <span className="text-sm">{item.label}</span>
                           </Link>
@@ -152,7 +158,7 @@ const Layout = () => {
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
             <h1 className="font-bold text-lg text-slate-800 dark:text-slate-100">
               {menuItems.find((i) => i.path === location.pathname)?.label ||
-                "FeedbackSys"}
+                "Stewardship Portal"}
             </h1>
           </header>
 

@@ -44,6 +44,7 @@ const Programs = () => {
     status: "PLANNED",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     fetchPrograms();
@@ -64,20 +65,51 @@ const Programs = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post("/programs/programs/", formData);
-      setModalOpen(false);
-      setFormData({
-        title: "",
-        description: "",
-        start_date: "",
-        target_beneficiaries: 0,
-        status: "PLANNED",
-      });
+      if (editingId) {
+        await api.put(`/programs/programs/${editingId}/`, formData);
+      } else {
+        await api.post("/programs/programs/", formData);
+      }
+      resetForm();
       fetchPrograms();
     } catch (error) {
       console.error(error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setModalOpen(false);
+    setEditingId(null);
+    setFormData({
+      title: "",
+      description: "",
+      start_date: "",
+      target_beneficiaries: 0,
+      status: "PLANNED",
+    });
+  };
+
+  const handleEdit = (program) => {
+    setEditingId(program.id);
+    setFormData({
+      title: program.title,
+      description: program.description,
+      start_date: program.start_date,
+      target_beneficiaries: program.target_beneficiaries,
+      status: program.status,
+    });
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this program?")) return;
+    try {
+      await api.delete(`/programs/programs/${id}/`);
+      fetchPrograms();
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -89,27 +121,30 @@ const Programs = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-end gap-4 flex-wrap">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Programs
           </h1>
-          <p className="text-slate-500 text-lg">
+          <p className="text-slate-500 text-sm">
             Manage and monitor all community programs.
           </p>
         </div>
         {canManage && (
-          <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
+          <Dialog open={isModalOpen} onOpenChange={(open) => {
+            if (!open) resetForm();
+            else setModalOpen(true);
+          }}>
             <DialogTrigger asChild>
-              <Button className="px-6">
+              <Button className="px-6" onClick={() => resetForm()}>
                 <Plus className="mr-2 h-4 w-4" /> New Program
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle className="text-xl">
-                  Create New Program
+                  {editingId ? "Edit Program" : "Create New Program"}
                 </DialogTitle>
                 <DialogDescription>
-                  Add a new program to the system. Click save when you are done.
+                  {editingId ? "Update the program details below." : "Add a new program to the system. Click save when you are done."}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-5 pt-4">
@@ -215,7 +250,7 @@ const Programs = () => {
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={() => setModalOpen(false)}
+                    onClick={() => resetForm()}
                   >
                     Cancel
                   </Button>
@@ -237,20 +272,20 @@ const Programs = () => {
         {programs.map((program) => (
           <Card
             key={program.id}
-            className="flex flex-col border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden group"
+            className="flex flex-col border-0 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-shadow"
           >
             <CardHeader className="pb-4 relative">
               <div className="flex justify-between items-start gap-4 pt-2">
-                <CardTitle className="text-xl line-clamp-2 leading-tight font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">
+                <CardTitle className="text-lg line-clamp-2 leading-tight font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">
                   {program.title}
                 </CardTitle>
                 <span
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shadow-sm ${
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
                     program.status === "COMPLETED"
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                      ? "bg-emerald-100/50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
                       : program.status === "ONGOING"
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
-                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+                        ? "bg-blue-100/50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+                        : "bg-amber-100/50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
                   }`}
                 >
                   {program.status}
@@ -293,6 +328,7 @@ const Programs = () => {
                   variant="outline"
                   size="sm"
                   className="flex-1 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold"
+                  onClick={() => handleEdit(program)}
                 >
                   <Edit2 className="w-4 h-4 mr-2 text-slate-400" /> Edit
                 </Button>
@@ -300,6 +336,7 @@ const Programs = () => {
                   variant="outline"
                   size="sm"
                   className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:border-red-900/50 dark:hover:bg-red-900/20 font-semibold"
+                  onClick={() => handleDelete(program.id)}
                 >
                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </Button>
