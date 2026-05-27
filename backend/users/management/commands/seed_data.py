@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from programs.models import Program
 from feedbacks.models import Feedback
+from users.models import BeneficiaryData
 from django.utils import timezone
 from datetime import timedelta
 
@@ -249,6 +250,33 @@ class Command(BaseCommand):
                 ))
             else:
                 self.stdout.write(f'  [--] Skipped feedback: {fb_data["user"].username}')
+
+        self.stdout.write(self.style.SUCCESS('\n[*] Creating beneficiary data...'))
+        beneficiaries_data = [
+            {
+                'lokasi': 'Kec. Bojonggede, Bogor',
+                'status': 'VERIFIED',
+            },
+            {
+                'lokasi': 'Desa Sukamaju, Bandung',
+                'status': 'INCOMPLETE',
+            },
+            {
+                'lokasi': 'Kel. Jaya, Sukabumi',
+                'status': 'PENDING',
+            },
+        ]
+
+        for ben_data in beneficiaries_data:
+            exists = BeneficiaryData.objects.filter(lokasi=ben_data['lokasi']).exists()
+            if not exists:
+                BeneficiaryData.objects.create(
+                    lokasi=ben_data['lokasi'],
+                    status=ben_data['status']
+                )
+                self.stdout.write(self.style.SUCCESS(f"  [OK] Beneficiary Location: {ben_data['lokasi']}"))
+            else:
+                self.stdout.write(f"  [--] Skipped location: {ben_data['lokasi']}")
 
         self.stdout.write(self.style.SUCCESS('\n[DONE] Seeding complete!\n'))
         self.stdout.write(self.style.WARNING('Login credentials (password: Password123!)'))

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Program, Documentation
 from .serializers import ProgramSerializer, DocumentationSerializer
-from users.permissions import IsStaffOperational, IsStaffOperationalOrLapangan, IsManager
+from users.permissions import IsStaffOperational, IsStaffOperationalOrLapangan, IsManager, IsStaffOperationalOrLapanganOrManager, IsStaffLapangan
 from django.db.models import Count, Avg
 from feedbacks.models import Feedback
 
@@ -25,9 +25,7 @@ class DocumentationViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentationSerializer
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsStaffOperationalOrLapangan()]
-        return [IsAuthenticated()]
+        return [IsAuthenticated(), IsStaffLapangan()]
 
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
@@ -68,11 +66,20 @@ class DashboardAPIView(APIView):
             name = item['status'].title()
             formatted_status.append({'name': name, 'value': item['value']})
 
+        # Fetch and serialize recent feedbacks based on role
+        if user.role == 'PENERIMA_MANFAAT':
+            recent_qs = Feedback.objects.filter(user=user).order_by('-created_at')[:5]
+        else:
+            recent_qs = Feedback.objects.order_by('-created_at')[:5]
+
+        from feedbacks.serializers import FeedbackSerializer
+        recent_serialized = FeedbackSerializer(recent_qs, many=True).data
+
         data = {
             'total_programs': Program.objects.count(),
             'total_feedbacks': Feedback.objects.count(),
             'average_rating': Feedback.objects.aggregate(Avg('rating'))['rating__avg'] or 0,
-            'recent_feedbacks': Feedback.objects.order_by('-created_at')[:5].values('id', 'content', 'rating', 'status', 'created_at'),
+            'recent_feedbacks': recent_serialized,
             'monthly_trend': formatted_trend,
             'status_distribution': formatted_status,
         }

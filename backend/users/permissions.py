@@ -23,3 +23,14 @@ class IsStaffOperationalOrManager(permissions.BasePermission):
 class IsStaffOperationalOrLapangan(permissions.BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.role in ['STAFF_OPERATIONAL', 'STAFF_LAPANGAN'])
+
+class IsStaffOperationalOrLapanganOrManager(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role in ['STAFF_OPERATIONAL', 'STAFF_LAPANGAN', 'MANAGER'])
+
+
+
+class IsStaffOperationalOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role == 'STAFF_LAPANGAN')
+

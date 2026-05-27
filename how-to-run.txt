@@ -1,89 +1,121 @@
-# Stewardship Portal - Panduan Menjalankan Proyek
+# Puspadi Bali Portal - Panduan Menjalankan Aplikasi
 
-Proyek ini terdiri dari dua bagian utama:
-1. **Backend**: Python (Django REST Framework)
-2. **Frontend**: Javascript (React / Vite)
+Aplikasi ini menggunakan teknologi berikut:
+- **Backend**: Python (Django REST Framework) + MySQL (sebagai database utama)
+- **Frontend**: Javascript (React / Vite)
 
-Berikut adalah langkah-langkah untuk menyiapkan dan menjalankan proyek ini di mesin lokal Anda.
+Untuk memudahkan Client maupun Penguji menjalankan aplikasi ini, kami menyediakan **dua (2) opsi cara menjalankan**:
 
 ---
 
-## 1. Setup Backend (Django)
+## 🚀 OPSYEN A: Menggunakan Docker & Docker Compose (SANGAT DIREKOMENDASIKAN)
+*Gunakan opsi ini jika komputer Anda tidak memiliki instalasi Python, Node.js, atau MySQL. Opsi ini hanya membutuhkan Docker Desktop saja.*
 
-Buka terminal dan arahkan ke direktori root proyek ini, kemudian jalankan langkah-langkah berikut:
+### Prasyarat:
+- Sudah menginstal **Docker** dan **Docker Compose** (atau **Docker Desktop**).
 
-1. **Masuk ke direktori backend**
+### Langkah-langkah:
+1. Buka terminal/command prompt di direktori root proyek ini (`web-pengelolaan-feedback`).
+2. Jalankan perintah berikut untuk mengunduh dan membangun semua service secara otomatis:
+   ```bash
+   docker-compose up --build
+   ```
+3. Docker secara otomatis akan:
+   - Membuat container database MySQL & mendirikan database `db_pengelolaan_feedback`.
+   - Menjalankan migrasi tabel backend Django.
+   - Mengisi data uji coba secara otomatis (**Seed Data**).
+   - Membangun server frontend React Vite.
+4. Setelah terminal menampilkan pesan server backend dan frontend berjalan, Anda bisa langsung mengakses aplikasi di browser:
+   - **Frontend**: `http://localhost:5173/`
+   - **Backend API**: `http://localhost:8000/`
+
+---
+
+## 🛠️ OPSYEN B: Menggunakan Instalasi Manual Lokal
+*Gunakan opsi ini jika Anda ingin menjalankan aplikasi secara manual menggunakan tools (Python, Node.js, MySQL) yang terpasang langsung di sistem lokal.*
+
+### Prasyarat:
+- **Python**: Versi 3.10 ke atas terpasang.
+- **Node.js**: Versi 18 ke atas terpasang.
+- **MySQL**: Layanan MySQL Server terpasang dan berjalan (port default `3306`).
+
+### Langkah 1: Setup Database MySQL
+1. Pastikan server MySQL lokal Anda berjalan.
+2. Buat database baru bernama `db_pengelolaan_feedback`. Jika password root MySQL Anda bukan `root`, Anda bisa menyesuaikannya di file `backend/core/settings.py` pada bagian `DATABASES`.
+3. Alternatif otomatis (menjalankan script pembuat database otomatis):
+   ```bash
+   cd backend
+   python db_setup.py
+   ```
+
+### Langkah 2: Setup Backend (Django REST Framework)
+1. Buka terminal dan masuk ke folder `backend`:
    ```bash
    cd backend
    ```
-
-2. **Buat dan Aktifkan Virtual Environment**
-   - Windows:
+2. Buat dan aktifkan **virtual environment**:
+   - **Windows (Command Prompt / Powershell)**:
      ```bash
      python -m venv venv
      .\venv\Scripts\activate
      ```
-   - macOS / Linux:
+   - **macOS / Linux**:
      ```bash
      python3 -m venv venv
      source venv/bin/activate
      ```
-
-3. **Install Dependencies**
+3. Pasang semua pustaka dependensi:
    ```bash
    pip install -r requirements.txt
    ```
-
-4. **Jalankan Migrasi Database**
-   Perintah ini akan membuat file `db.sqlite3` dan menyiapkan semua tabel yang diperlukan.
+4. Jalankan perintah migrasi tabel database:
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
-
-5. **Masukkan Data Awal (Seed Data) & Buat Akun Default**
-   Proyek ini dilengkapi dengan skrip untuk membuat data program awal dan beberapa user dengan peran berbeda (Manager, Staff Operational, Staff Lapangan, Penerima Manfaat).
+5. Isi database dengan data uji coba awal (akun default, program kerja, dll.):
    ```bash
    python manage.py seed_data
    ```
-   *Catatan: Akun default yang dibuat dapat dilihat di file `backend/users/management/commands/seed_data.py`. Password default untuk akun yang di-seed biasanya `Password123!`.*
-
-6. **Jalankan Server Backend**
+6. Jalankan server backend:
    ```bash
    python manage.py runserver
    ```
-   Server backend akan berjalan di `http://127.0.0.1:8000/`. Biarkan terminal ini tetap terbuka.
+   *Server backend sekarang berjalan di `http://127.0.0.1:8000/`.*
 
----
-
-## 2. Setup Frontend (React / Vite)
-
-Buka **terminal baru** (biarkan terminal backend tetap berjalan), lalu ikuti langkah-langkah berikut:
-
-1. **Masuk ke direktori frontend**
+### Langkah 3: Setup Frontend (React / Vite)
+1. Buka terminal baru dan masuk ke folder `frontend`:
    ```bash
    cd frontend
    ```
-
-2. **Install Dependencies NPM**
-   Pastikan Anda sudah menginstal Node.js di sistem Anda.
+2. Pasang semua dependensi NPM:
    ```bash
    npm install
    ```
-
-3. **Jalankan Server Frontend (Development Mode)**
+3. Jalankan server frontend dalam mode development:
    ```bash
    npm run dev
    ```
-   Aplikasi frontend akan berjalan di `http://localhost:5173/`. 
+   *Aplikasi frontend sekarang berjalan di `http://localhost:5173/`.*
 
 ---
 
-## 3. Akses Aplikasi
+## 🔑 Akun Pengujian Uji Coba (UAT Login Credentials)
 
-1. Buka browser Anda dan kunjungi `http://localhost:5173/`.
-2. Anda akan diarahkan ke halaman login.
-3. Anda dapat masuk menggunakan salah satu akun yang dibuat oleh skrip `seed_data`. Contoh akun:
-   - **Username:** `manager01`
-   - **Password:** `Password123!`
-4. Selamat mencoba Stewardship Portal!
+Proyek ini telah di-seed dengan akun siap pakai untuk mempermudah simulasi UAT. Silakan login ke `http://localhost:5173/` dengan akun berikut:
+
+1. **Manager** (Dashboard Utama & Laporan Ekspor):
+   - **Username**: `manager01`
+   - **Password**: `Password123!`
+
+2. **Staff Lapangan** (Manajemen Penerima & Unggah Dokumentasi Program):
+   - **Username**: `staff_lapangan01`
+   - **Password**: `Password123!`
+
+3. **Staff Operational** (Pemantauan Feedback):
+   - **Username**: `staff_ops01`
+   - **Password**: `Password123!`
+
+4. **Penerima Manfaat** (Mengirim & Mengisi Laporan Feedback):
+   - **Username**: `penerima01`
+   - **Password**: `Password123!`

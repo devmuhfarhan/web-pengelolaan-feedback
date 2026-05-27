@@ -15,10 +15,10 @@ class FeedbackViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'create':
-            # Penerima Manfaat and Staff Lapangan can create
+            # Only Penerima Manfaat can create feedback
             class CanCreateFeedback(permissions.BasePermission):
                 def has_permission(self, request, view):
-                    return request.user.role in ['PENERIMA_MANFAAT', 'STAFF_LAPANGAN']
+                    return request.user.role == 'PENERIMA_MANFAAT'
             return [IsAuthenticated(), CanCreateFeedback()]
         
         if self.action in ['update', 'partial_update']:

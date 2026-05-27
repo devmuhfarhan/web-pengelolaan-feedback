@@ -46,13 +46,141 @@ const Dashboard = () => {
     },
   }
 
+  const exportToCSV = () => {
+    const rows = [
+      ["METRIK", "NILAI"],
+      ["Total Laporan", stats.total_feedbacks],
+      ["Program Aktif", stats.total_programs],
+      ["Skor Feedback Rata-rata", Number(stats.average_rating).toFixed(1)],
+      ["Laporan Menunggu Review (Pending)", pendingCount],
+      [],
+      ["AKTIVITAS TERBARU - PROGRAM", "REPORTER", "STATUS", "TANGGAL"]
+    ];
+
+    stats.recent_feedbacks.forEach(fb => {
+      rows.push([
+        fb.program_detail?.title || "Unknown",
+        fb.user_detail?.username || "",
+        fb.status,
+        new Date(fb.created_at).toLocaleDateString()
+      ]);
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + rows.map(e => e.map(val => `"${val}"`).join(",")).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Laporan_Dashboard_Puspadi_Bali_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = () => {
+    const printWindow = window.open("", "_blank");
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Laporan Dashboard Overview Puspadi Bali</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; color: #1e293b; padding: 40px; }
+            h1 { font-size: 24px; font-weight: 800; margin-bottom: 5px; color: #0f172a; }
+            p.subtitle { font-size: 14px; color: #64748b; margin-top: 0; margin-bottom: 30px; }
+            .grid-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+            .card-metric { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; }
+            .metric-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+            .metric-val { font-size: 28px; font-weight: 900; color: #0f172a; }
+            .section-title { font-size: 18px; font-weight: 700; margin-top: 40px; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background-color: #f8fafc; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+            td { font-size: 13px; padding: 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+            .status { font-size: 9px; font-weight: bold; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
+            .status.resolved { background-color: #d1fae5; color: #065f46; }
+            .status.reviewed { background-color: #dbeafe; color: #1e40af; }
+            .status.pending { background-color: #fef3c7; color: #92400e; }
+            @media print {
+              body { padding: 0; }
+              @page { margin: 20mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Laporan Ringkasan Dashboard - Puspadi Bali</h1>
+          <p class="subtitle">Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+          
+          <div class="grid-metrics">
+            <div class="card-metric">
+              <div class="metric-title">Total Laporan</div>
+              <div class="metric-val">${stats.total_feedbacks}</div>
+            </div>
+            <div class="card-metric">
+              <div class="metric-title">Program Kerja Aktif</div>
+              <div class="metric-val">${stats.total_programs}</div>
+            </div>
+            <div class="card-metric">
+              <div class="metric-title">Skor Feedback</div>
+              <div class="metric-val">${Number(stats.average_rating).toFixed(1)}/5</div>
+            </div>
+            <div class="card-metric">
+              <div class="metric-title">Review Tertunda</div>
+              <div class="metric-val">${pendingCount}</div>
+            </div>
+          </div>
+
+          <div class="section-title">Aktivitas Laporan Terbaru</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Program</th>
+                <th>Reporter</th>
+                <th>Status</th>
+                <th>Tanggal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${stats.recent_feedbacks.map(fb => `
+                <tr>
+                  <td><strong>${fb.program_detail?.title || "Unknown"}</strong></td>
+                  <td>${fb.user_detail?.username || ""}</td>
+                  <td><span class="status ${fb.status.toLowerCase()}">${fb.status}</span></td>
+                  <td>${new Date(fb.created_at).toLocaleDateString('id-ID')}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   // ---- ROLE: MANAGER ----
   if (user?.role === 'MANAGER') {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col gap-1 mb-2">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard Overview</h1>
-          <p className="text-slate-500 text-sm">Monitoring mission-critical feedback and program integrity.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard Overview</h1>
+            <p className="text-slate-500 text-sm">Monitoring mission-critical feedback and program integrity.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={exportToCSV} variant="outline" size="sm" className="flex items-center gap-1.5 h-9 font-semibold text-xs border-slate-200 cursor-pointer">
+              Export CSV
+            </Button>
+            <Button onClick={exportToPDF} variant="outline" size="sm" className="flex items-center gap-1.5 h-9 font-semibold text-xs border-slate-200 cursor-pointer">
+              Export PDF
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -218,9 +346,11 @@ const Dashboard = () => {
   if (user?.role === 'STAFF_OPERATIONAL' || user?.role === 'STAFF_LAPANGAN') {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col gap-1 mb-2">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Operational Staff Dashboard</h1>
-          <p className="text-slate-500 text-sm">Welcome back. Here's the latest operational data.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Operational Staff Dashboard</h1>
+            <p className="text-slate-500 text-sm">Welcome back. Here's the latest operational data.</p>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">

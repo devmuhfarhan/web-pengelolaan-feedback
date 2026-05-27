@@ -12,6 +12,8 @@ import {
   FileText,
   MessageSquare,
   Leaf,
+  Users,
+  Camera,
 } from "lucide-react";
 import {
   Sidebar,
@@ -71,6 +73,18 @@ const Layout = () => {
         "PENERIMA_MANFAAT",
       ],
     },
+    {
+      label: "Data Penerima",
+      path: "/beneficiaries",
+      icon: Users,
+      roles: ["STAFF_LAPANGAN"],
+    },
+    {
+      label: "Dokumentasi",
+      path: "/documentation",
+      icon: Camera,
+      roles: ["STAFF_LAPANGAN"],
+    },
   ].filter((item) => item.roles.includes(user?.role));
 
   return (
@@ -87,10 +101,10 @@ const Layout = () => {
               </div>
               <div className="flex flex-col">
                 <h2 className="text-xl font-extrabold text-primary tracking-tight leading-none">
-                  Stewardship
+                  Puspadi
                 </h2>
                 <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                  Portal
+                  Bali
                 </h3>
               </div>
             </div>
@@ -109,13 +123,15 @@ const Layout = () => {
                         <SidebarMenuButton
                           asChild
                           isActive={isActive}
-                          className={`transition-all duration-200 py-3 relative overflow-hidden ${isActive ? "bg-primary/10 text-primary font-bold hover:bg-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"}`}
+                          className={`transition-all duration-200 relative overflow-hidden ${isActive ? "bg-primary/10 text-primary font-bold hover:bg-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"}`}
                         >
                           <Link
                             to={item.path}
-                            className="flex items-center gap-3 w-full h-full"
+                            className="flex items-center gap-3 w-full h-full py-3"
                           >
-                            {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />}
+                            {isActive && (
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                            )}
                             <item.icon
                               className={`w-5 h-5 ml-1 ${isActive ? "text-primary" : "text-slate-400 group-hover:text-primary"}`}
                             />
@@ -158,7 +174,7 @@ const Layout = () => {
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
             <h1 className="font-bold text-lg text-slate-800 dark:text-slate-100">
               {menuItems.find((i) => i.path === location.pathname)?.label ||
-                "Stewardship Portal"}
+                "Puspadi Bali"}
             </h1>
           </header>
 

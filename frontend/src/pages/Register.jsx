@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -131,24 +132,20 @@ const Register = () => {
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 z-10" />
-                  <select
-                    id="role"
+                  <Select
                     value={formData.role}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value })
-                    }
-                    required
-                    className="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50/50 px-3 py-2 pl-9 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                    onValueChange={(val) => setFormData({ ...formData, role: val })}
                   >
-                    <option value="" disabled>
-                      Select your role
-                    </option>
-                    <option value="MANAGER">Manager</option>
-                    <option value="STAFF_OPERATIONAL">Operational Staff</option>
-                    <option value="STAFF_LAPANGAN">Field Staff</option>
-                    <option value="PENERIMA_MANFAAT">Beneficiary</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <SelectTrigger className="h-9 pl-9 bg-slate-50/50 border-slate-200 text-sm">
+                      <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MANAGER">Manager</SelectItem>
+                      <SelectItem value="STAFF_OPERATIONAL">Operational Staff</SelectItem>
+                      <SelectItem value="STAFF_LAPANGAN">Field Staff</SelectItem>
+                      <SelectItem value="PENERIMA_MANFAAT">Beneficiary</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

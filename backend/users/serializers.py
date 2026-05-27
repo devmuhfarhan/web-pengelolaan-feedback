@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import BeneficiaryData
 
 User = get_user_model()
 
@@ -39,3 +40,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=role
         )
         return user
+
+class BeneficiaryDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BeneficiaryData
+        fields = '__all__'
+

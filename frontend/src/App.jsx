@@ -7,6 +7,8 @@ import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import Programs from "@/pages/Programs";
 import Feedbacks from "@/pages/Feedbacks";
+import Beneficiaries from "@/pages/Beneficiaries";
+import Documentation from "@/pages/Documentation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { LoadingScreen } from "@/components/ui/Loading";
 
@@ -66,6 +68,32 @@ function App() {
                 ]}
               >
                 <Feedbacks />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="beneficiaries"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "STAFF_LAPANGAN",
+                ]}
+              >
+                <Beneficiaries />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="documentation"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "STAFF_LAPANGAN",
+                ]}
+              >
+                <Documentation />
               </ProtectedRoute>
             }
           />

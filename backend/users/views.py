@@ -5,9 +5,11 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework import status
+from rest_framework import status, viewsets
 from drf_spectacular.utils import extend_schema
-from .serializers import UserSerializer, RegisterSerializer
+from .serializers import UserSerializer, RegisterSerializer, BeneficiaryDataSerializer
+from .models import BeneficiaryData
+from .permissions import IsStaffOperationalOrReadOnly
 
 class CookieTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -107,3 +109,9 @@ class RegisterView(APIView):
             user = serializer.save()
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BeneficiaryDataViewSet(viewsets.ModelViewSet):
+    queryset = BeneficiaryData.objects.all().order_by('-created_at')
+    serializer_class = BeneficiaryDataSerializer
+    permission_classes = [IsStaffOperationalOrReadOnly]
+
