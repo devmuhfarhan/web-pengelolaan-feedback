@@ -1,40 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useAuthStore from "@/store/authStore";
 import api from "@/lib/axios";
-import { Plus, Edit2, Trash2, Calendar, Users } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Plus, Edit2, Trash2, Calendar, Users, Eye, UploadCloud, FileText, CheckCircle2, Loader2, Info, ExternalLink } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loading } from "@/components/ui/Loading";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const BACKEND_URL = "http://127.0.0.1:8000";
 
 const Programs = () => {
   const { user } = useAuthStore();
+  const isStaffLapangan = user?.role === "STAFF_LAPANGAN";
+  const canManage = user?.role === "STAFF_OPERATIONAL";
+
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Program Form States
   const [isModalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -46,6 +32,18 @@ const Programs = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
+  // Program Detail & Context-aware Upload States
+  const [selectedProgram, setSelectedProgram] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUploadPanelOpen, setIsUploadPanelOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadFilePreview, setUploadFilePreview] = useState("");
+  const [uploadDescription, setUploadDescription] = useState("");
+  const [uploadSubmitting, setUploadSubmitting] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState("");
+  const programFileInputRef = useRef(null);
+
   useEffect(() => {
     fetchPrograms();
   }, []);
@@ -54,6 +52,11 @@ const Programs = () => {
     try {
       const { data } = await api.get("/programs/programs/");
       setPrograms(data);
+      // Update selected program if currently viewed in detail modal
+      if (selectedProgram) {
+        const updated = data.find(p => p.id === selectedProgram.id);
+        if (updated) setSelectedProgram(updated);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -91,7 +94,8 @@ const Programs = () => {
     });
   };
 
-  const handleEdit = (program) => {
+  const handleEdit = (e, program) => {
+    e.stopPropagation(); // Avoid opening details modal
     setEditingId(program.id);
     setFormData({
       title: program.title,
@@ -103,8 +107,9 @@ const Programs = () => {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this program?")) return;
+  const handleDelete = async (e, id) => {
+    e.stopPropagation(); // Avoid opening details modal
+    if (!window.confirm("Apakah Anda yakin ingin menghapus program kerja ini beserta seluruh datanya?")) return;
     try {
       await api.delete(`/programs/programs/${id}/`);
       fetchPrograms();
@@ -113,19 +118,104 @@ const Programs = () => {
     }
   };
 
-  if (loading) return <Loading text="Loading Programs..." />;
+  const handleOpenDetailModal = (program) => {
+    setSelectedProgram(program);
+    setIsUploadPanelOpen(false);
+    setUploadFile(null);
+    setUploadFilePreview("");
+    setUploadDescription("");
+    setUploadError("");
+    setUploadSuccess("");
+    setIsDetailModalOpen(true);
+  };
 
-  const canManage = user?.role === "STAFF_OPERATIONAL";
+  // Program Context-Aware File Upload Handling
+  const handleProgramFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError("File terlalu besar. Maksimal ukuran file adalah 10MB.");
+        return;
+      }
+      const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError("Format file tidak didukung. Harap unggah file JPG, PNG, atau PDF.");
+        return;
+      }
+      setUploadFile(file);
+      setUploadError("");
+
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setUploadFilePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setUploadFilePreview("pdf");
+      }
+    }
+  };
+
+  const handleProgramUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadFile) {
+      setUploadError("Silakan pilih file bukti foto/laporan terlebih dahulu.");
+      return;
+    }
+
+    setUploadSubmitting(true);
+    setUploadError("");
+    setUploadSuccess("");
+
+    const formDataUpload = new FormData();
+    formDataUpload.append("program", selectedProgram.id);
+    formDataUpload.append("file", uploadFile);
+    formDataUpload.append("description", uploadDescription);
+
+    try {
+      await api.post("/programs/documentations/", formDataUpload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setUploadSuccess("Bukti foto kegiatan berhasil diunggah!");
+      setUploadDescription("");
+      setUploadFile(null);
+      setUploadFilePreview("");
+      setIsUploadPanelOpen(false);
+      if (programFileInputRef.current) programFileInputRef.current.value = "";
+      
+      // Refresh database records
+      fetchPrograms();
+    } catch (error) {
+      console.error("Error uploading program documentation:", error);
+      setUploadError("Gagal mengunggah foto. Silakan coba lagi.");
+    } finally {
+      setUploadSubmitting(false);
+    }
+  };
+
+  const getMediaUrl = (urlPath) => {
+    if (!urlPath) return "";
+    if (urlPath.startsWith("http://") || urlPath.startsWith("https://")) {
+      return urlPath;
+    }
+    return `${BACKEND_URL}${urlPath}`;
+  };
+
+  if (loading) return <Loading text="Memuat data program..." />;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end gap-4 flex-wrap">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Programs
+      <div className="flex justify-between items-end gap-4 flex-wrap bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">
+            Program Kerja & Bukti Kegiatan
           </h1>
           <p className="text-slate-500 text-sm">
-            Manage and monitor all community programs.
+            Pantau detail program kerja dan unggah bukti pelaksanaan kegiatan lapangan secara spesifik.
           </p>
         </div>
         {canManage && (
@@ -134,26 +224,23 @@ const Programs = () => {
             else setModalOpen(true);
           }}>
             <DialogTrigger asChild>
-              <Button className="px-6" onClick={() => resetForm()}>
-                <Plus className="mr-2 h-4 w-4" /> New Program
+              <Button className="px-5 font-bold shadow-md rounded-xl" onClick={() => resetForm()}>
+                <Plus className="mr-1.5 h-5 w-5" /> Buat Program Baru
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle className="text-xl">
-                  {editingId ? "Edit Program" : "Create New Program"}
+                  {editingId ? "Edit Program Kerja" : "Buat Program Baru"}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingId ? "Update the program details below." : "Add a new program to the system. Click save when you are done."}
+                  {editingId ? "Perbarui informasi rincian program kerja." : "Masukkan data rincian program kerja baru untuk dijalankan."}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-5 pt-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="title"
-                    className="font-semibold text-slate-700 dark:text-slate-300"
-                  >
-                    Title
+                  <Label htmlFor="title" className="font-semibold text-slate-700 dark:text-slate-300">
+                    Nama Program Kerja
                   </Label>
                   <Input
                     id="title"
@@ -166,11 +253,8 @@ const Programs = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="description"
-                    className="font-semibold text-slate-700 dark:text-slate-300"
-                  >
-                    Description
+                  <Label htmlFor="description" className="font-semibold text-slate-700 dark:text-slate-300">
+                    Deskripsi Program
                   </Label>
                   <textarea
                     id="description"
@@ -179,16 +263,13 @@ const Programs = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="flex min-h-[100px] w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all resize-none shadow-sm"
+                    className="flex min-h-[100px] w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary outline-none transition-all resize-none shadow-sm text-slate-800 dark:text-slate-100"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="start_date"
-                      className="font-semibold text-slate-700 dark:text-slate-300"
-                    >
-                      Start Date
+                    <Label htmlFor="start_date" className="font-semibold text-slate-700 dark:text-slate-300">
+                      Tanggal Mulai
                     </Label>
                     <Input
                       id="start_date"
@@ -202,11 +283,8 @@ const Programs = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="target"
-                      className="font-semibold text-slate-700 dark:text-slate-300"
-                    >
-                      Target Beneficiaries
+                    <Label htmlFor="target" className="font-semibold text-slate-700 dark:text-slate-300">
+                      Target Penerima
                     </Label>
                     <Input
                       id="target"
@@ -224,11 +302,8 @@ const Programs = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="status"
-                    className="font-semibold text-slate-700 dark:text-slate-300"
-                  >
-                    Status
+                  <Label htmlFor="status" className="font-semibold text-slate-700 dark:text-slate-300">
+                    Status Pelaksanaan
                   </Label>
                   <Select
                     value={formData.status}
@@ -240,26 +315,18 @@ const Programs = () => {
                       <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PLANNED">Planned</SelectItem>
-                      <SelectItem value="ONGOING">Ongoing</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                      <SelectItem value="PLANNED">Planned (Direncanakan)</SelectItem>
+                      <SelectItem value="ONGOING">Ongoing (Berlangsung)</SelectItem>
+                      <SelectItem value="COMPLETED">Completed (Selesai)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <DialogFooter className="pt-4">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => resetForm()}
-                  >
-                    Cancel
+                  <Button type="button" variant="ghost" onClick={() => resetForm()}>
+                    Batal
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-8"
-                  >
-                    {isSubmitting ? "Saving..." : "Save Program"}
+                  <Button type="submit" disabled={isSubmitting} className="px-8 font-semibold">
+                    {isSubmitting ? "Menyimpan..." : "Simpan Program"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -268,11 +335,13 @@ const Programs = () => {
         )}
       </div>
 
+      {/* Program Work Cards List */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {programs.map((program) => (
           <Card
             key={program.id}
-            className="flex flex-col border-0 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-shadow"
+            onClick={() => handleOpenDetailModal(program)}
+            className="flex flex-col border-0 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md hover:ring-primary/40 dark:hover:ring-primary/40 transition-all duration-200 cursor-pointer"
           >
             <CardHeader className="pb-4 relative">
               <div className="flex justify-between items-start gap-4 pt-2">
@@ -280,7 +349,7 @@ const Programs = () => {
                   {program.title}
                 </CardTitle>
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                  className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
                     program.status === "COMPLETED"
                       ? "bg-emerald-100/50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
                       : program.status === "ONGOING"
@@ -292,72 +361,257 @@ const Programs = () => {
                 </span>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
-              <p className="text-slate-600 dark:text-slate-300 line-clamp-3 mb-6 flex-1 text-sm leading-relaxed">
+            <CardContent className="flex-1 flex flex-col justify-between">
+              <p className="text-slate-600 dark:text-slate-350 line-clamp-3 mb-6 text-sm leading-relaxed">
                 {program.description}
               </p>
-              <div className="space-y-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-100 dark:border-slate-800 mt-auto">
-                <div className="flex items-center text-slate-600 dark:text-slate-400 text-sm font-medium">
-                  <div className="bg-primary/10 p-1.5 rounded-lg mr-3">
-                    <Users className="w-4 h-4 text-primary" />
-                  </div>
+              <div className="space-y-2.5 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mt-auto">
+                <div className="flex items-center text-slate-600 dark:text-slate-455 text-xs font-semibold">
+                  <Users className="w-4 h-4 text-primary mr-2.5" />
                   <span>
                     Target:{" "}
                     <strong className="text-slate-800 dark:text-slate-200">
                       {program.target_beneficiaries}
                     </strong>{" "}
-                    beneficiaries
+                    Penerima Manfaat
                   </span>
                 </div>
-                <div className="flex items-center text-slate-600 dark:text-slate-400 text-sm font-medium">
-                  <div className="bg-primary/10 p-1.5 rounded-lg mr-3">
-                    <Calendar className="w-4 h-4 text-primary" />
-                  </div>
+                <div className="flex items-center text-slate-600 dark:text-slate-455 text-xs font-semibold">
+                  <Calendar className="w-4 h-4 text-primary mr-2.5" />
                   <span>
-                    Start:{" "}
+                    Dimulai:{" "}
                     <strong className="text-slate-800 dark:text-slate-200">
-                      {new Date(program.start_date).toLocaleDateString()}
+                      {new Date(program.start_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                     </strong>
                   </span>
                 </div>
               </div>
             </CardContent>
-            {canManage && (
-              <CardFooter className="pt-4 pb-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 gap-3 px-6">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold"
-                  onClick={() => handleEdit(program)}
-                >
-                  <Edit2 className="w-4 h-4 mr-2 text-slate-400" /> Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:border-red-900/50 dark:hover:bg-red-900/20 font-semibold"
-                  onClick={() => handleDelete(program.id)}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete
-                </Button>
-              </CardFooter>
-            )}
+            <CardFooter className="pt-3 pb-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/20 px-6 flex justify-between items-center text-xs font-bold text-primary group-hover:text-primary-hover">
+              <span className="flex items-center gap-1">
+                <Eye className="w-4 h-4" /> Detail Kegiatan
+              </span>
+              {canManage && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    className="p-1 h-7 w-7 text-slate-500 hover:text-primary hover:bg-slate-100"
+                    onClick={(e) => handleEdit(e, program)}
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    className="p-1 h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200"
+                    onClick={(e) => handleDelete(e, program.id)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              )}
+            </CardFooter>
           </Card>
         ))}
         {programs.length === 0 && (
-          <div className="col-span-full py-16 flex flex-col items-center justify-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
-            <FileText
-              size={48}
-              className="mb-4 text-slate-300 dark:text-slate-700"
-              strokeWidth={1}
-            />
-            <p className="text-lg font-medium">No programs found</p>
-            <p className="text-sm">
-              Click 'New Program' to add the first program.
-            </p>
+          <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
+            <FileText size={48} className="mb-4 text-slate-300 dark:text-slate-700 animate-bounce" strokeWidth={1} />
+            <p className="text-lg font-bold text-slate-700 dark:text-slate-350">Tidak ada program kerja</p>
+            <p className="text-sm text-slate-400">Belum ada program kerja Puspadi Bali yang terdaftar.</p>
           </div>
         )}
       </div>
+
+      {/* Program Detail & Context-aware Proof Upload Modal */}
+      {isDetailModalOpen && selectedProgram && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
+              <div className="flex items-center gap-2">
+                <Info className="w-5 h-5 text-primary" />
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
+                  Rincian & Bukti Program Kerja
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+              {/* Program Information */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <h4 className="text-lg font-bold text-slate-850 dark:text-slate-100 leading-tight">
+                    {selectedProgram.title}
+                  </h4>
+                  <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary">
+                    {selectedProgram.status}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-350 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850 whitespace-pre-line">
+                  {selectedProgram.description}
+                </p>
+              </div>
+
+              {/* Upload Proof photo Form Panel (Expanding on click) */}
+              {isStaffLapangan && (
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+                  <button
+                    onClick={() => {
+                      setIsUploadPanelOpen(!isUploadPanelOpen);
+                      setUploadFile(null);
+                      setUploadFilePreview("");
+                      setUploadDescription("");
+                      setUploadError("");
+                      setUploadSuccess("");
+                    }}
+                    className="w-full px-5 py-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5 text-primary">
+                      <UploadCloud className="w-4 h-4" /> Upload Foto Kegiatan (Bukti Pelaksanaan)
+                    </span>
+                    <span>{isUploadPanelOpen ? "Tutup Form" : "Buka Form"}</span>
+                  </button>
+
+                  {isUploadPanelOpen && (
+                    <form onSubmit={handleProgramUploadSubmit} className="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 space-y-4">
+                      {uploadError && (
+                        <div className="p-3 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg">
+                          {uploadError}
+                        </div>
+                      )}
+                      {uploadSuccess && (
+                        <div className="p-3 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-1.5 animate-pulse">
+                          <CheckCircle2 className="w-4 h-4" />
+                          {uploadSuccess}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Pilih atau Ambil Foto</label>
+                          <div
+                            onClick={() => programFileInputRef.current?.click()}
+                            className="w-full py-6 px-3 border border-dashed border-slate-250 hover:border-primary rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50/50 transition-all text-center"
+                          >
+                            <input
+                              ref={programFileInputRef}
+                              type="file"
+                              accept="image/*,application/pdf"
+                              onChange={handleProgramFileChange}
+                              className="hidden"
+                            />
+                            {uploadFilePreview ? (
+                              uploadFilePreview === "pdf" ? (
+                                <div className="flex items-center gap-1.5 text-xs text-rose-500 font-semibold">
+                                  <FileText className="w-4 h-4" />
+                                  <span className="truncate max-w-[120px]">{uploadFile?.name}</span>
+                                </div>
+                              ) : (
+                                <img src={uploadFilePreview} alt="preview" className="h-10 w-auto object-cover rounded-md" />
+                              )
+                            ) : (
+                              <>
+                                <UploadCloud className="w-5 h-5 text-primary" />
+                                <span className="text-[10px] text-slate-450 font-bold">Pilih berkas pembuktian</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Keterangan / Keterangan Bukti</label>
+                          <textarea
+                            placeholder="Deskripsikan bukti foto pelaksanaan ini..."
+                            value={uploadDescription}
+                            onChange={(e) => setUploadDescription(e.target.value)}
+                            rows="3"
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-primary text-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setIsUploadPanelOpen(false)}>
+                          Batal
+                        </Button>
+                        <Button type="submit" size="sm" disabled={uploadSubmitting} className="font-bold flex items-center gap-1.5 px-4">
+                          {uploadSubmitting && <Loader2 className="w-3 h-3 animate-spin" />} Upload Bukti
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {/* Gallery of Proof of Implementation Specific to this program */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                  Galeri Bukti Pelaksanaan (Hanya untuk program ini)
+                </h4>
+                {selectedProgram.documentations && selectedProgram.documentations.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {selectedProgram.documentations.map((doc) => {
+                      const isImg = doc.file && !doc.file.toLowerCase().endsWith(".pdf");
+                      return (
+                        <div key={doc.id} className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col justify-between group relative">
+                          <div className="aspect-video flex items-center justify-center bg-slate-100 dark:bg-slate-900 border-b border-slate-200/50 overflow-hidden">
+                            {isImg ? (
+                              <img
+                                src={getMediaUrl(doc.file)}
+                                alt={doc.description || "Bukti"}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center gap-1 text-rose-500">
+                                <FileText className="w-8 h-8" />
+                                <span className="text-[9px] font-bold">PDF Laporan</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-2.5 text-[11px] text-slate-655 leading-relaxed truncate">
+                            {doc.description || "(Tanpa keterangan)"}
+                          </div>
+                          {/* Floating open full button */}
+                          <a
+                            href={getMediaUrl(doc.file)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="absolute top-2 right-2 p-1 bg-white/95 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-white text-slate-600 shadow-sm"
+                            title="Buka Berkas Penuh"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 text-slate-400 text-xs">
+                    Belum ada bukti pelaksanaan/foto kegiatan yang terunggah untuk program kerja ini.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
+              <Button onClick={() => setIsDetailModalOpen(false)} className="h-9 px-6 text-xs font-semibold">
+                Tutup
+              </Button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

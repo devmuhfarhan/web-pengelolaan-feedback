@@ -22,11 +22,12 @@ class Program(models.Model):
         return self.title
 
 class Documentation(models.Model):
-    program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name='documentations')
+    program = models.ForeignKey(Program, on_delete=models.SET_NULL, null=True, blank=True, related_name='documentations')
     file = models.FileField(upload_to='documentations/')
     description = models.CharField(max_length=255, blank=True)
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Doc for {self.program.title} by {self.uploaded_by.username if self.uploaded_by else 'Unknown'}"
+        program_title = self.program.title if self.program else 'General'
+        return f"Doc for {program_title} by {self.uploaded_by.username if self.uploaded_by else 'Unknown'}"

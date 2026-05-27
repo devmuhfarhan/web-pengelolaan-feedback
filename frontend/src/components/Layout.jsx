@@ -14,6 +14,7 @@ import {
   Leaf,
   Users,
   Camera,
+  UploadCloud,
 } from "lucide-react";
 import {
   Sidebar,
@@ -80,7 +81,7 @@ const Layout = () => {
       roles: ["STAFF_LAPANGAN"],
     },
     {
-      label: "Dokumentasi",
+      label: "Dokumentasi Lapangan",
       path: "/documentation",
       icon: Camera,
       roles: ["STAFF_LAPANGAN"],
@@ -96,8 +97,12 @@ const Layout = () => {
         >
           <SidebarHeader className="p-6">
             <div className="flex items-center gap-3">
-              <div className="bg-primary p-2 rounded-xl text-primary-foreground shadow-sm">
-                <Leaf className="w-6 h-6 fill-white/20" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm flex items-center justify-center bg-white border border-slate-100 p-0.5">
+                <img
+                  src="/logo.png"
+                  alt="Puspadi Bali Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <h2 className="text-xl font-extrabold text-primary tracking-tight leading-none">

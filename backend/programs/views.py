@@ -21,8 +21,11 @@ class ProgramViewSet(viewsets.ModelViewSet):
         serializer.save(manager=self.request.user)
 
 class DocumentationViewSet(viewsets.ModelViewSet):
-    queryset = Documentation.objects.all().order_by('-uploaded_at')
     serializer_class = DocumentationSerializer
+
+    def get_queryset(self):
+        # General documentation gallery only displays files NOT tied to any specific program
+        return Documentation.objects.filter(program__isnull=True).order_by('-uploaded_at')
 
     def get_permissions(self):
         return [IsAuthenticated(), IsStaffLapangan()]

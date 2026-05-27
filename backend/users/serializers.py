@@ -42,7 +42,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class BeneficiaryDataSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False, default='Password123!')
+
     class Meta:
-        model = BeneficiaryData
-        fields = '__all__'
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone_number', 'role', 'password')
+        read_only_fields = ('id', 'role')
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', 'Password123!')
+        validated_data['role'] = 'PENERIMA_MANFAAT'
+        user = User.objects.create_user(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 

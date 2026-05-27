@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status, viewsets
 from drf_spectacular.utils import extend_schema
 from .serializers import UserSerializer, RegisterSerializer, BeneficiaryDataSerializer
-from .models import BeneficiaryData
+from .models import User
 from .permissions import IsStaffOperationalOrReadOnly
 
 class CookieTokenObtainPairView(TokenObtainPairView):
@@ -111,7 +111,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class BeneficiaryDataViewSet(viewsets.ModelViewSet):
-    queryset = BeneficiaryData.objects.all().order_by('-created_at')
+    queryset = User.objects.filter(role='PENERIMA_MANFAAT').order_by('-id')
     serializer_class = BeneficiaryDataSerializer
     permission_classes = [IsStaffOperationalOrReadOnly]
 
