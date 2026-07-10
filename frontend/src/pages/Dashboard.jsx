@@ -48,13 +48,13 @@ const Dashboard = () => {
 
   const exportToCSV = () => {
     const rows = [
-      ["METRIK", "NILAI"],
-      ["Total Laporan", stats.total_feedbacks],
-      ["Program Aktif", stats.total_programs],
-      ["Skor Feedback Rata-rata", Number(stats.average_rating).toFixed(1)],
-      ["Laporan Menunggu Review (Pending)", pendingCount],
+      ["METRIC", "VALUE"],
+      ["Total Reports", stats.total_feedbacks],
+      ["Active Programs", stats.total_programs],
+      ["Average Feedback Score", Number(stats.average_rating).toFixed(1)],
+      ["Pending Reviews", pendingCount],
       [],
-      ["AKTIVITAS TERBARU - PROGRAM", "REPORTER", "STATUS", "TANGGAL"]
+      ["RECENT ACTIVITY - PROGRAM", "REPORTER", "STATUS", "DATE"]
     ];
 
     stats.recent_feedbacks.forEach(fb => {
@@ -72,7 +72,7 @@ const Dashboard = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Laporan_Dashboard_Puspadi_Bali_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `Dashboard_Report_Puspadi_Bali_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -83,7 +83,7 @@ const Dashboard = () => {
     const htmlContent = `
       <html>
         <head>
-          <title>Laporan Dashboard Overview Puspadi Bali</title>
+          <title>Dashboard Overview Report Puspadi Bali</title>
           <style>
             body { font-family: system-ui, -apple-system, sans-serif; color: #1e293b; padding: 40px; }
             h1 { font-size: 24px; font-weight: 800; margin-bottom: 5px; color: #0f172a; }
@@ -107,36 +107,36 @@ const Dashboard = () => {
           </style>
         </head>
         <body>
-          <h1>Laporan Ringkasan Dashboard - Puspadi Bali</h1>
-          <p class="subtitle">Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+          <h1>Dashboard Summary Report - Puspadi Bali</h1>
+          <p class="subtitle">Printed at: ${new Date().toLocaleString('en-US')}</p>
           
           <div class="grid-metrics">
             <div class="card-metric">
-              <div class="metric-title">Total Laporan</div>
+              <div class="metric-title">Total Reports</div>
               <div class="metric-val">${stats.total_feedbacks}</div>
             </div>
             <div class="card-metric">
-              <div class="metric-title">Program Kerja Aktif</div>
+              <div class="metric-title">Active Programs</div>
               <div class="metric-val">${stats.total_programs}</div>
             </div>
             <div class="card-metric">
-              <div class="metric-title">Skor Feedback</div>
+              <div class="metric-title">Feedback Score</div>
               <div class="metric-val">${Number(stats.average_rating).toFixed(1)}/5</div>
             </div>
             <div class="card-metric">
-              <div class="metric-title">Review Tertunda</div>
+              <div class="metric-title">Pending Reviews</div>
               <div class="metric-val">${pendingCount}</div>
             </div>
           </div>
 
-          <div class="section-title">Aktivitas Laporan Terbaru</div>
+          <div class="section-title">Recent Reports Activity</div>
           <table>
             <thead>
               <tr>
                 <th>Program</th>
                 <th>Reporter</th>
                 <th>Status</th>
-                <th>Tanggal</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
@@ -145,7 +145,7 @@ const Dashboard = () => {
                   <td><strong>${fb.program_detail?.title || "Unknown"}</strong></td>
                   <td>${fb.user_detail?.username || ""}</td>
                   <td><span class="status ${fb.status.toLowerCase()}">${fb.status}</span></td>
-                  <td>${new Date(fb.created_at).toLocaleDateString('id-ID')}</td>
+                  <td>${new Date(fb.created_at).toLocaleDateString('en-US')}</td>
                 </tr>
               `).join("")}
             </tbody>
@@ -348,8 +348,12 @@ const Dashboard = () => {
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
           <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Operational Staff Dashboard</h1>
-            <p className="text-slate-500 text-sm">Welcome back. Here's the latest operational data.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {user?.role === 'STAFF_LAPANGAN' ? 'Field Staff Dashboard' : 'Operational Staff Dashboard'}
+            </h1>
+            <p className="text-slate-500 text-sm">
+              {user?.role === 'STAFF_LAPANGAN' ? "Welcome back. Here's the latest field data." : "Welcome back. Here's the latest operational data."}
+            </p>
           </div>
         </div>
 
@@ -357,7 +361,7 @@ const Dashboard = () => {
           <Card className="bg-white dark:bg-slate-900 shadow-sm border-0 ring-1 ring-slate-200 dark:ring-slate-800">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Laporan</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Reports</p>
                 <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">{stats.total_feedbacks}</h3>
               </div>
               <div className="bg-emerald-100/50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center">
@@ -407,7 +411,7 @@ const Dashboard = () => {
           <Card className="md:col-span-2 bg-white dark:bg-slate-900 shadow-sm border-0 ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden">
             <CardHeader className="pb-4">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-base text-slate-800 dark:text-slate-100">Trend Pelaporan Berkala</CardTitle>
+                <CardTitle className="text-base text-slate-800 dark:text-slate-100">Regular Reporting Trend</CardTitle>
                 <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold px-2 py-1 rounded-md">Last 6 Months</span>
               </div>
             </CardHeader>
@@ -425,7 +429,7 @@ const Dashboard = () => {
           
           <Card className="bg-white dark:bg-slate-900 shadow-sm border-0 ring-1 ring-slate-200 dark:ring-slate-800">
             <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
-              <CardTitle className="text-base text-slate-800 dark:text-slate-100">View Laporan</CardTitle>
+              <CardTitle className="text-base text-slate-800 dark:text-slate-100">Recent Reports Log</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -502,7 +506,21 @@ const Dashboard = () => {
                     {fb.status}
                   </span>
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{fb.content}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                  {(() => {
+                    try {
+                      const parsed = typeof fb.content === 'string' ? JSON.parse(fb.content) : fb.content;
+                      if (parsed && typeof parsed === 'object') {
+                        const values = Object.values(parsed).filter(v => typeof v === 'number');
+                        if (values.length > 0) {
+                          const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
+                          return `Average Rating: ${avg} / 4 (${values.length} questions answered)`;
+                        }
+                      }
+                    } catch {}
+                    return fb.content;
+                  })()}
+                </p>
                 <div className="text-xs text-slate-400 font-medium">{new Date(fb.created_at).toLocaleDateString()}</div>
               </div>
             ))}

@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status, viewsets
 from drf_spectacular.utils import extend_schema
-from .serializers import UserSerializer, RegisterSerializer, BeneficiaryDataSerializer
-from .models import User
-from .permissions import IsStaffOperationalOrReadOnly
+from .serializers import UserSerializer, RegisterSerializer, BeneficiaryDataSerializer, ActivityLogSerializer
+from .models import User, ActivityLog
+from .permissions import IsStaffOperationalOrReadOnly, IsAdmin
 
 class CookieTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -50,6 +50,18 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             # del response.data['access']
             # del response.data['refresh']
             response.data['message'] = 'Login successful'
+            
+            # Log login action
+            try:
+                user = User.objects.get(username=request.data.get('username'))
+                ActivityLog.objects.create(
+                    user=user,
+                    action=ActivityLog.Action.LOGIN,
+                    description=f"{user.username} logged in"
+                )
+            except User.DoesNotExist:
+                pass
+                
         return response
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -110,8 +122,69 @@ class RegisterView(APIView):
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from rest_framework.decorators import action
+from .models import BeneficiaryReplacement
+
 class BeneficiaryDataViewSet(viewsets.ModelViewSet):
     queryset = User.objects.filter(role='PENERIMA_MANFAAT').order_by('-id')
     serializer_class = BeneficiaryDataSerializer
     permission_classes = [IsStaffOperationalOrReadOnly]
 
+    def perform_create(self, serializer):
+        user = serializer.save(updated_by=self.request.user)
+        ActivityLog.objects.create(
+            user=self.request.user,
+            action=ActivityLog.Action.CREATE,
+            description=f"Created beneficiary {user.username}"
+        )
+
+    def perform_update(self, serializer):
+        user = serializer.save(updated_by=self.request.user)
+        ActivityLog.objects.create(
+            user=self.request.user,
+            action=ActivityLog.Action.UPDATE,
+            description=f"Updated beneficiary {user.username}"
+        )
+
+    def perform_destroy(self, instance):
+        username = instance.username
+        instance.delete()
+        ActivityLog.objects.create(
+            user=self.request.user,
+            action=ActivityLog.Action.DELETE,
+            description=f"Deleted beneficiary {username}"
+        )
+
+    @action(detail=True, methods=['post'])
+    def add_replacement(self, request, pk=None):
+        user = self.get_object()
+        program_id = request.data.get('program')
+        date_replaced = request.data.get('date_replaced')
+        if not date_replaced:
+            return Response({'error': 'date_replaced is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        replacement = BeneficiaryReplacement.objects.create(
+            user=user,
+            program_id=program_id,
+            date_replaced=date_replaced,
+            created_by=request.user
+        )
+        # Update user's updated_by
+        user.updated_by = request.user
+        user.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            action=ActivityLog.Action.UPDATE,
+            description=f"Added replacement for beneficiary {user.username}"
+        )
+        return Response({'message': 'Replacement added successfully'}, status=status.HTTP_201_CREATED)
+
+class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ActivityLog.objects.all().order_by('-created_at')
+    serializer_class = ActivityLogSerializer
+    permission_classes = [IsAdmin]
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]

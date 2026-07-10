@@ -19,6 +19,7 @@ class DocumentationSerializer(serializers.ModelSerializer):
 class ProgramSerializer(serializers.ModelSerializer):
     manager_detail = UserSerializer(source='manager', read_only=True)
     documentations = DocumentationSerializer(many=True, read_only=True)
+    beneficiaries = UserSerializer(many=True, read_only=True)
 
     class Meta:
         model = Program

@@ -53,7 +53,7 @@ Untuk memudahkan Client maupun Penguji menjalankan aplikasi ini, kami menyediaka
    ```bash
    cd backend
    ```
-2. Buat dan aktifkan **virtual environment**:
+2. Buat dan aktifkan **virtual environment** (venv):
    - **Windows (Command Prompt / Powershell)**:
      ```bash
      python -m venv venv
@@ -73,7 +73,7 @@ Untuk memudahkan Client maupun Penguji menjalankan aplikasi ini, kami menyediaka
    python manage.py makemigrations
    python manage.py migrate
    ```
-5. Isi database dengan data uji coba awal (akun default, program kerja, dll.):
+5. Isi database dengan data uji coba awal (akun default, program, dll.):
    ```bash
    python manage.py seed_data
    ```
@@ -104,18 +104,45 @@ Untuk memudahkan Client maupun Penguji menjalankan aplikasi ini, kami menyediaka
 
 Proyek ini telah di-seed dengan akun siap pakai untuk mempermudah simulasi UAT. Silakan login ke `http://localhost:5173/` dengan akun berikut:
 
-1. **Manager** (Dashboard Utama & Laporan Ekspor):
+1. **Manager** (Dashboard Utama, Akses ke Semua Fitur, Laporan Ekspor):
    - **Username**: `manager01`
    - **Password**: `Password123!`
 
-2. **Staff Lapangan** (Manajemen Penerima & Unggah Dokumentasi Program):
+2. **Staff Lapangan / Field Staff** (Manajemen Terbatas Penerima (Tidak bisa Edit/Delete) & Dokumentasi):
    - **Username**: `staff_lapangan01`
    - **Password**: `Password123!`
 
-3. **Staff Operational** (Pemantauan Feedback):
+3. **Staff Operational** (Pemantauan Feedback, Program, & Dokumen):
    - **Username**: `staff_ops01`
    - **Password**: `Password123!`
 
-4. **Penerima Manfaat** (Mengirim & Mengisi Laporan Feedback):
+4. **Penerima Manfaat / Beneficiary** (Mengirim & Mengisi Laporan Feedback):
    - **Username**: `penerima01`
    - **Password**: `Password123!`
+
+---
+
+## 📌 Fitur Baru yang Ditambahkan & Catatan Pengujian (UAT Highlights)
+
+Untuk mempermudah verifikasi hasil pengerjaan (Sesuai Revisi Klien Terakhir), berikut adalah ringkasan fitur baru yang telah diimplementasikan:
+
+1. **Internasionalisasi / Bahasa Inggris**:
+   - Seluruh teks UI dari Menu Dashboard, Feedback, Penerima Manfaat, hingga Program sekarang menggunakan bahasa Inggris.
+   - Istilah "Program Kerja" telah disesuaikan dan diubah secara konsisten menjadi "Program".
+   - Untuk Manager, label "Start Date" telah diubah menjadi "Implementation Date" pada modul Program.
+
+2. **Manajemen Data Penerima Manfaat (Beneficiaries)**:
+   - **Perubahan Struktur Data**: Kolom form `Email` dan `Password` telah dihapus saat proses tambah Penerima Manfaat. Username untuk beneficiary sekarang digenerasi secara otomatis dan mandiri (cth: `penerima_xxxx`).
+   - **Riwayat Penggantian (Replacement History)**: Data pergantian tanggal sekarang tidak menimpa / override data lama. Jika ada pembaruan tanggal/program penggantian, staf bisa menekan "Add Replacement" untuk mendata histori secara vertikal.
+   - **Log Modifikasi (Audit Trail)**: Panel rincian informasi menambahkan data tentang "Last Modified By" yang menyimpan riwayat User ID siapa yang paling akhir memodifikasi profil tersebut.
+   - **Restriksi Staff Lapangan**: Akun dengan Role "Staff Lapangan" secara default tidak dapat mengakses fungsi _Edit_ maupun _Delete_ pada manajemen Penerima Manfaat. (Semuanya disembunyikan / dikunci).
+
+3. **Sistem Feedback Modern & Log Data JSON**:
+   - Skema kuesioner pada form "Submit Feedback" telah diubah total menjadi 10 Pertanyaan Spesifik berbahasa Inggris sesuai pesanan.
+   - Rating yang tadinya rentang 1-5 diubah menggunakan skala Likert point 1 hingga 4.
+   - Hasil kalkulasi dan respons pertanyaan disimpan menggunakan format JSON di database, memungkinkan tracking skor dari pertanyaan-pertanyaan spesifik dan export yang rapi.
+
+4. **Kumpulan Data Bersih (Puspadi Clean Programs)**:
+   - Dummy data untuk program telah dihapus.
+   - Aplikasi di-seed menggunakan set data program asli Puspadi (cth: _Rehabilitasi, Pendidikan, Pelatihan & Pemberdayaan, Advokasi_) ketika script `seed_data` dieksekusi. 
+

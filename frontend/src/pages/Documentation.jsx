@@ -14,6 +14,8 @@ import {
   UploadCloud,
   Plus,
   CheckCircle2,
+  Link as LinkIcon,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,8 +32,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const BACKEND_URL = "http://127.0.0.1:8000";
 
@@ -55,6 +57,7 @@ const Documentation = () => {
   });
   const [editFile, setEditFile] = useState(null);
   const [editFilePreview, setEditFilePreview] = useState("");
+  const [editDriveLink, setEditDriveLink] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -63,6 +66,7 @@ const Documentation = () => {
   const [uploadDescription, setUploadDescription] = useState("");
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadFilePreview, setUploadFilePreview] = useState("");
+  const [uploadDriveLink, setUploadDriveLink] = useState("");
   const [uploadSubmitting, setUploadSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
@@ -81,6 +85,14 @@ const Documentation = () => {
     try {
       const response = await api.get("/programs/documentations/");
       setDocumentations(response.data);
+      
+      // Update selectedDoc if it is open
+      if (selectedDoc) {
+        const updated = response.data.find(d => d.id === selectedDoc.id);
+        if (updated) {
+          setSelectedDoc(updated);
+        }
+      }
     } catch (error) {
       console.error("Error fetching documentations:", error);
     } finally {
@@ -94,14 +106,14 @@ const Documentation = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus dokumentasi ini?")) {
+    if (window.confirm("Are you sure you want to delete this documentation?")) {
       try {
         await api.delete(`/programs/documentations/${id}/`);
         setIsDetailModalOpen(false);
         fetchDocumentations();
       } catch (error) {
         console.error("Error deleting documentation:", error);
-        alert("Gagal menghapus dokumentasi.");
+        alert("Failed to delete documentation.");
       }
     }
   };
@@ -112,6 +124,7 @@ const Documentation = () => {
       program: doc.program ? doc.program.toString() : "",
       description: doc.description,
     });
+    setEditDriveLink(doc.drive_link || "");
     setEditFile(null);
     setEditFilePreview("");
     setIsEditMode(false);
@@ -123,40 +136,29 @@ const Documentation = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 10 * 1024 * 1024) {
-        setEditError("File terlalu besar. Maksimal ukuran file adalah 10MB.");
+        setEditError("File is too large. Maximum file size is 10MB.");
         return;
       }
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/jpg",
-        "application/pdf",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        setEditError(
-          "Format file tidak didukung. Harap unggah file JPG, PNG, atau PDF.",
-        );
+      const allowedTypes = ["image/jpeg", "image/jpg"];
+      if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith(".jpg") && !file.name.toLowerCase().endsWith(".jpeg")) {
+        setEditError("Unsupported file format. Please upload JPG or JPEG format only.");
         return;
       }
       setEditFile(file);
       setEditError("");
 
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setEditFilePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setEditFilePreview("pdf");
-      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditFilePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!editFormData.description.trim()) {
-      setEditError("Silakan masukkan keterangan.");
+      setEditError("Please enter description.");
       return;
     }
 
@@ -164,12 +166,13 @@ const Documentation = () => {
     setEditError("");
 
     const updateData = new FormData();
-    if (editFormData.program) {
+    if (editFormData.program && editFormData.program !== "none") {
       updateData.append("program", editFormData.program);
     } else {
-      updateData.append("program", ""); // Clear program association
+      updateData.append("program", "");
     }
     updateData.append("description", editFormData.description);
+    updateData.append("drive_link", editDriveLink.trim());
     if (editFile) {
       updateData.append("file", editFile);
     }
@@ -192,51 +195,39 @@ const Documentation = () => {
       fetchDocumentations();
     } catch (error) {
       console.error("Error updating documentation:", error);
-      setEditError("Gagal memperbarui dokumentasi. Silakan coba lagi.");
+      setEditError("Failed to update documentation. Please try again.");
     } finally {
       setEditSubmitting(false);
     }
   };
 
-  // General Upload Logic
   const handleUploadFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 10 * 1024 * 1024) {
-        setUploadError("File terlalu besar. Maksimal ukuran file adalah 10MB.");
+        setUploadError("File is too large. Maximum file size is 10MB.");
         return;
       }
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/jpg",
-        "application/pdf",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        setUploadError(
-          "Format file tidak didukung. Harap unggah file JPG, PNG, atau PDF.",
-        );
+      const allowedTypes = ["image/jpeg", "image/jpg"];
+      if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith(".jpg") && !file.name.toLowerCase().endsWith(".jpeg")) {
+        setUploadError("Unsupported file format. Please upload JPG or JPEG format only.");
         return;
       }
       setUploadFile(file);
       setUploadError("");
 
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setUploadFilePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setUploadFilePreview("pdf");
-      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadFilePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    if (!uploadFile) {
-      setUploadError("Silakan pilih file berkas dokumentasi.");
+    if (!uploadFile && !uploadDriveLink.trim()) {
+      setUploadError("Please select a JPG photo file or enter a Google Drive link.");
       return;
     }
 
@@ -245,7 +236,12 @@ const Documentation = () => {
     setUploadSuccess("");
 
     const formData = new FormData();
-    formData.append("file", uploadFile);
+    if (uploadFile) {
+      formData.append("file", uploadFile);
+    }
+    if (uploadDriveLink.trim()) {
+      formData.append("drive_link", uploadDriveLink);
+    }
     formData.append("description", uploadDescription);
 
     try {
@@ -255,8 +251,9 @@ const Documentation = () => {
         },
       });
 
-      setUploadSuccess("Dokumentasi umum berhasil disimpan!");
+      setUploadSuccess("General documentation saved successfully!");
       setUploadDescription("");
+      setUploadDriveLink("");
       setUploadFile(null);
       setUploadFilePreview("");
       if (uploadFileInputRef.current) uploadFileInputRef.current.value = "";
@@ -269,7 +266,7 @@ const Documentation = () => {
       }, 1000);
     } catch (error) {
       console.error("Error uploading general documentation:", error);
-      setUploadError("Gagal mengunggah dokumentasi umum. Silakan coba lagi.");
+      setUploadError("Failed to upload general documentation. Please try again.");
     } finally {
       setUploadSubmitting(false);
     }
@@ -289,10 +286,10 @@ const Documentation = () => {
       <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 font-sans">
-            Dokumentasi Lapangan
+            Field Documentation
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Arsip foto dan berkas laporan umum.
+            Photo archives and general report files for Puspadi Bali.
           </p>
         </div>
         {canUpload && (
@@ -300,6 +297,7 @@ const Documentation = () => {
             <Button
               onClick={() => {
                 setUploadDescription("");
+                setUploadDriveLink("");
                 setUploadFile(null);
                 setUploadFilePreview("");
                 setUploadError("");
@@ -308,15 +306,15 @@ const Documentation = () => {
               }}
               className="h-11 px-5 flex items-center gap-2 font-bold shadow-md rounded-xl"
             >
-              <Plus className="w-5 h-5" /> Upload Dokumentasi Umum
+              <Plus className="w-5 h-5" /> Upload General Documentation
             </Button>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle className="text-xl">
-                  Upload Dokumentasi Umum
+                  Upload General Documentation
                 </DialogTitle>
                 <DialogDescription>
-                  Unggah file arsip berupa foto, laporan PDF, dll.
+                  Upload file as JPG/JPEG photo, or include a drive link.
                 </DialogDescription>
               </DialogHeader>
 
@@ -333,31 +331,24 @@ const Documentation = () => {
                   </div>
                 )}
 
-                {/* File Upload Selector */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    Pilih File Berkas
-                  </label>
-                  <div
-                    onClick={() => uploadFileInputRef.current?.click()}
-                    className="w-full py-8 px-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-950 transition-all"
-                  >
-                    <input
-                      ref={uploadFileInputRef}
-                      type="file"
-                      accept="image/*,application/pdf"
-                      onChange={handleUploadFileChange}
-                      className="hidden"
-                    />
-                    {uploadFilePreview ? (
-                      uploadFilePreview === "pdf" ? (
-                        <div className="flex flex-col items-center gap-1">
-                          <FileText className="w-10 h-10 text-rose-500" />
-                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-350">
-                            {uploadFile?.name}
-                          </span>
-                        </div>
-                      ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {/* File Upload Selector */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                      Upload Photo (JPG/JPEG Format)
+                    </label>
+                    <div
+                      onClick={() => uploadFileInputRef.current?.click()}
+                      className="w-full py-8 px-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-955 transition-all text-center"
+                    >
+                      <input
+                        ref={uploadFileInputRef}
+                        type="file"
+                        accept=".jpg,.jpeg,image/jpeg"
+                        onChange={handleUploadFileChange}
+                        className="hidden"
+                      />
+                      {uploadFilePreview ? (
                         <div className="relative rounded-lg overflow-hidden border border-slate-200 w-full max-h-[140px] flex justify-center bg-slate-100">
                           <img
                             src={uploadFilePreview}
@@ -365,34 +356,48 @@ const Documentation = () => {
                             className="h-full object-cover max-h-[140px]"
                           />
                         </div>
-                      )
-                    ) : (
-                      <>
-                        <UploadCloud className="w-8 h-8 text-primary" />
-                        <div className="text-center">
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Klik untuk mencari file berkas
-                          </p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Format: JPG, PNG, PDF (Maksimal 10MB)
-                          </p>
-                        </div>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <UploadCloud className="w-8 h-8 text-primary" />
+                          <div className="text-center">
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                              Click to browse photo file
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Format: JPG / JPEG only (Maximum 10MB)
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Drive Link Input Option */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                      <LinkIcon className="w-3.5 h-3.5 text-slate-400" /> Google Drive Link (Alternative)
+                    </label>
+                    <Input
+                      placeholder="https://drive.google.com/..."
+                      value={uploadDriveLink}
+                      onChange={(e) => setUploadDriveLink(e.target.value)}
+                      className="h-10 text-xs rounded-lg"
+                    />
+                    <p className="text-[10px] text-slate-400">Enter Drive link to save internal storage.</p>
                   </div>
                 </div>
 
                 {/* Description input */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    Keterangan (Opsional)
+                    Evidence Description
                   </label>
                   <textarea
-                    placeholder="Tulis keterangan opsional mengenai file dokumentasi ini..."
+                    placeholder="Write description about this documentation..."
                     value={uploadDescription}
                     onChange={(e) => setUploadDescription(e.target.value)}
                     rows="3"
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-850 bg-slate-50 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary text-slate-850"
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 bg-slate-55 dark:bg-slate-955 rounded-lg text-xs outline-none focus:ring-1 focus:ring-primary text-slate-850 dark:text-slate-100"
                   />
                 </div>
 
@@ -402,7 +407,7 @@ const Documentation = () => {
                     variant="ghost"
                     onClick={() => setIsUploadModalOpen(false)}
                   >
-                    Batal
+                    Cancel
                   </Button>
                   <Button
                     type="submit"
@@ -412,7 +417,7 @@ const Documentation = () => {
                     {uploadSubmitting && (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     )}
-                    Simpan Arsip
+                    Save Archive
                   </Button>
                 </DialogFooter>
               </form>
@@ -424,30 +429,28 @@ const Documentation = () => {
       {/* Media Documentation Gallery Grid */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm min-h-[450px]">
         <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6">
-          Galeri Dokumentasi Umum
+          General Documentation Gallery
         </h2>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-sm text-slate-500">Memuat foto dokumentasi...</p>
+            <p className="text-sm text-slate-500">Loading documentation photos...</p>
           </div>
         ) : documentations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-2">
             <ImageIcon className="w-12 h-12 text-slate-300 dark:text-slate-700 animate-pulse" />
             <p className="text-base font-semibold text-slate-600 dark:text-slate-400">
-              Belum ada foto dokumentasi
+              No documentation photos yet
             </p>
             <p className="text-sm text-slate-400 text-center max-w-sm">
-              Belum ada bukti foto pelaksanaan program di lapangan yang
-              diunggah.
+              No photo evidence of field program implementation has been uploaded yet.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {documentations.map((doc) => {
-              const isImage =
-                doc.file && !doc.file.toLowerCase().endsWith(".pdf");
+              const isImage = doc.file && !doc.file.toLowerCase().endsWith(".pdf");
 
               return (
                 <div
@@ -458,32 +461,48 @@ const Documentation = () => {
                   <div
                     onClick={() => handleOpenDetailModal(doc)}
                     className="aspect-video w-full relative bg-slate-100 dark:bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100 dark:border-slate-800 cursor-pointer"
-                    title="Klik untuk melihat detail"
+                    title="Click to view details"
                   >
-                    {isImage ? (
-                      <img
-                        src={getMediaUrl(doc.file)}
-                        alt={doc.description || "Dokumentasi"}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center gap-2 text-rose-500">
-                        <FileText className="w-12 h-12" />
+                    {doc.file ? (
+                      isImage ? (
+                        <img
+                          src={getMediaUrl(doc.file)}
+                          alt={doc.description || "Documentation"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-rose-500">
+                          <FileText className="w-12 h-12" />
+                          <span className="text-xs font-semibold">
+                            PDF Document
+                          </span>
+                        </div>
+                      )
+                    ) : doc.drive_link ? (
+                      <div className="flex flex-col items-center gap-2 text-blue-500">
+                        <LinkIcon className="w-12 h-12 text-blue-500" />
                         <span className="text-xs font-semibold">
-                          Dokumen PDF
+                          Google Drive Link
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-slate-400">
+                        <Info className="w-12 h-12" />
+                        <span className="text-xs font-semibold">
+                          No file
                         </span>
                       </div>
                     )}
 
                     {/* Top float elements */}
                     <div className="absolute top-3 left-3 bg-primary/95 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-xs">
-                      {doc.program_detail?.title || "UMUM"}
+                      {doc.program_detail?.title || "GENERAL"}
                     </div>
 
                     {/* Quick View Hover Indicator */}
-                    <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-slate-955/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="bg-white/95 text-slate-800 dark:bg-slate-900/95 dark:text-slate-100 text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-sm uppercase tracking-wider">
-                        <Eye className="w-3.5 h-3.5" /> Lihat Detail
+                        <Eye className="w-3.5 h-3.5" /> View Details
                       </span>
                     </div>
                   </div>
@@ -491,7 +510,7 @@ const Documentation = () => {
                   {/* Content Area */}
                   <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                      {doc.description || "(Tanpa keterangan)"}
+                      {doc.description || (doc.drive_link ? "Google Drive Link" : "(No description)")}
                     </p>
 
                     {/* Footer Details */}
@@ -499,14 +518,14 @@ const Documentation = () => {
                       <div className="flex items-center gap-1">
                         <User className="w-3 h-3 text-slate-400" />
                         <span>
-                          {doc.uploaded_by_detail?.username || "Petugas"}
+                          {doc.uploaded_by_detail?.username || "Staff"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3 text-slate-400" />
                         <span>
                           {new Date(doc.uploaded_at).toLocaleDateString(
-                            "id-ID",
+                            "en-US",
                             {
                               day: "numeric",
                               month: "short",
@@ -532,8 +551,8 @@ const Documentation = () => {
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 {isEditMode
-                  ? "Edit Dokumentasi"
-                  : "Detail Dokumentasi Kegiatan"}
+                  ? "Edit Documentation"
+                  : "Activity Documentation Details"}
               </h3>
               <button
                 onClick={() => setIsDetailModalOpen(false)}
@@ -555,8 +574,7 @@ const Documentation = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                      Program Kerja (Opsional, pilih jika ingin mengaitkan ke
-                      program)
+                      Program (Optional)
                     </label>
                     <Select
                       value={editFormData.program}
@@ -564,18 +582,18 @@ const Documentation = () => {
                         setEditFormData({ ...editFormData, program: val })
                       }
                     >
-                      <SelectTrigger className="w-full h-10 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-sm text-slate-850 dark:text-slate-150">
-                        <SelectValue placeholder="-- Umum (Tidak terikat program) --">
+                      <SelectTrigger className="w-full h-10 border border-slate-200 dark:border-slate-855 bg-slate-50 dark:bg-slate-950 text-sm text-slate-800 dark:text-slate-100">
+                        <SelectValue placeholder="-- General (Not tied to program) --">
                           {programs.find(
                             (p) =>
                               p.id.toString() ===
                               editFormData.program.toString(),
-                          )?.title || "-- Umum (Tidak terikat program) --"}
+                          )?.title || "-- General (Not tied to program) --"}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">
-                          -- Umum (Tidak terikat program) --
+                          -- General (Not tied to program) --
                         </SelectItem>
                         {programs.map((prog) => (
                           <SelectItem key={prog.id} value={prog.id.toString()}>
@@ -589,51 +607,56 @@ const Documentation = () => {
                   {/* Change Media Input */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                      Ubah File Dokumentasi (Biarkan kosong jika tidak ingin
-                      diubah)
+                      Change Documentation File (JPG/JPEG)
                     </label>
                     <div
                       onClick={() => editFileInputRef.current?.click()}
-                      className="w-full py-5 px-4 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-955 transition-all"
+                      className="w-full py-5 px-4 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-955 transition-all text-center"
                     >
                       <input
                         ref={editFileInputRef}
                         type="file"
-                        accept="image/*,application/pdf"
+                        accept=".jpg,.jpeg,image/jpeg"
                         onChange={handleEditFileChange}
                         className="hidden"
                       />
                       {editFilePreview ? (
-                        editFilePreview === "pdf" ? (
-                          <div className="flex items-center gap-2 text-rose-500 text-xs font-semibold">
-                            <FileText className="w-5 h-5" />
-                            <span>PDF Baru: {editFile?.name}</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
-                            <img
-                              src={editFilePreview}
-                              alt="new preview"
-                              className="w-10 h-10 object-cover rounded-md"
-                            />
-                            <span>Gambar Baru Terpilih</span>
-                          </div>
-                        )
+                        <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-350">
+                          <img
+                            src={editFilePreview}
+                            alt="new preview"
+                            className="w-10 h-10 object-cover rounded-md"
+                          />
+                          <span>New Image Selected</span>
+                        </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 justify-center w-full">
                           <UploadCloud className="w-4 h-4 text-primary" />
-                          <span>Klik untuk mengganti gambar/file baru</span>
+                          <span>Click to replace with new JPG image</span>
                         </div>
                       )}
                     </div>
                   </div>
 
+                  {/* Change Drive Link Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                      <LinkIcon className="w-3.5 h-3.5" /> Google Drive Link
+                    </label>
+                    <Input
+                      placeholder="https://drive.google.com/..."
+                      value={editDriveLink}
+                      onChange={(e) => setEditDriveLink(e.target.value)}
+                      className="h-10 text-xs rounded-lg bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+                    />
+                  </div>
+
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                      Deskripsi / Keterangan (Opsional)
+                      Description / Evidence Information
                     </label>
                     <textarea
-                      placeholder="Masukkan keterangan foto dokumentasi..."
+                      placeholder="Enter description of documentation photo..."
                       value={editFormData.description}
                       onChange={(e) =>
                         setEditFormData({
@@ -642,7 +665,7 @@ const Documentation = () => {
                         })
                       }
                       rows="4"
-                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 focus:bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition-all text-slate-800 dark:text-slate-100"
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                     />
                   </div>
                 </div>
@@ -655,7 +678,7 @@ const Documentation = () => {
                     onClick={() => setIsEditMode(false)}
                     disabled={editSubmitting}
                   >
-                    Batal
+                    Cancel
                   </Button>
                   <Button
                     type="submit"
@@ -665,37 +688,52 @@ const Documentation = () => {
                     {editSubmitting && (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     )}
-                    Simpan Perubahan
+                    Save Changes
                   </Button>
                 </div>
               </form>
             ) : (
               <div className="p-6 space-y-5">
                 {/* Media Preview Box */}
-                <div className="w-full overflow-hidden flex justify-center bg-slate-955 dark:bg-slate-955 rounded-xl relative max-h-[300px]">
-                  {selectedDoc.file &&
-                  !selectedDoc.file.toLowerCase().endsWith(".pdf") ? (
-                    <img
-                      src={getMediaUrl(selectedDoc.file)}
-                      alt={selectedDoc.description || "Dokumentasi"}
-                      className="max-h-[300px] w-auto object-contain rounded-xl"
-                    />
-                  ) : (
+                <div className="w-full overflow-hidden flex justify-center bg-slate-100 dark:bg-slate-950 rounded-xl relative max-h-[300px] border border-slate-200 dark:border-slate-800">
+                  {selectedDoc.file ? (
+                    selectedDoc.file.toLowerCase().endsWith(".pdf") ? (
+                      <a
+                        href={getMediaUrl(selectedDoc.file)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex flex-col items-center justify-center py-16 text-rose-500 hover:text-rose-450 w-full transition-all"
+                      >
+                        <FileText className="w-16 h-16 mb-2" />
+                        <span className="text-sm font-bold flex items-center gap-1">
+                          Open PDF Documentation File{" "}
+                          <ExternalLink className="w-4 h-4" />
+                        </span>
+                      </a>
+                    ) : (
+                      <img
+                        src={getMediaUrl(selectedDoc.file)}
+                        alt={selectedDoc.description || "Documentation"}
+                        className="max-h-[300px] w-auto object-contain rounded-xl"
+                      />
+                    )
+                  ) : selectedDoc.drive_link ? (
                     <a
-                      href={getMediaUrl(selectedDoc.file)}
+                      href={selectedDoc.drive_link}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex flex-col items-center justify-center py-16 text-rose-500 hover:text-rose-450 w-full transition-all"
+                      className="flex flex-col items-center justify-center py-16 text-blue-500 hover:text-blue-400 w-full transition-all"
                     >
-                      <FileText className="w-16 h-16 mb-2" />
+                      <LinkIcon className="w-16 h-16 mb-2 text-blue-500" />
                       <span className="text-sm font-bold flex items-center gap-1">
-                        Buka File PDF Dokumentasi{" "}
-                        <ExternalLink className="w-4 h-4" />
-                      </span>
-                      <span className="text-xs opacity-70 mt-1">
-                        Klik untuk membuka di tab baru
+                        Open Google Drive Link <ExternalLink className="w-4 h-4" />
                       </span>
                     </a>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                      <Info className="w-16 h-16 mb-2" />
+                      <span className="text-sm font-semibold">No file/drive link</span>
+                    </div>
                   )}
                 </div>
 
@@ -703,29 +741,29 @@ const Documentation = () => {
                 <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-150 dark:border-slate-800">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Program Kerja
+                      Program
                     </span>
                     <p className="text-xs font-bold text-primary">
-                      {selectedDoc.program_detail?.title || "UMUM / BEBAS"}
+                      {selectedDoc.program_detail?.title || "GENERAL"}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Pengunggah
+                      Uploader
                     </span>
                     <p className="text-xs font-bold text-slate-700 dark:text-slate-350">
                       {selectedDoc.uploaded_by_detail
                         ? `${selectedDoc.uploaded_by_detail.username || ""}`.trim()
-                        : "Petugas"}
+                        : "Staff"}
                     </p>
                   </div>
                   <div className="space-y-1 col-span-2">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Tanggal Diunggah
+                      Uploaded Date
                     </span>
                     <p className="text-xs font-bold text-slate-700 dark:text-slate-350">
                       {new Date(selectedDoc.uploaded_at).toLocaleString(
-                        "id-ID",
+                        "en-US",
                         {
                           day: "numeric",
                           month: "long",
@@ -737,15 +775,30 @@ const Documentation = () => {
                       WITA
                     </p>
                   </div>
+                  {selectedDoc.drive_link && (
+                    <div className="space-y-1 col-span-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Google Drive Link
+                      </span>
+                      <a 
+                        href={selectedDoc.drive_link} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="text-xs font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1 mt-0.5"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Open Drive Link
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wide">
-                    Keterangan Kegiatan
+                    Activity Description
                   </h4>
                   <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-955 p-4 rounded-xl border border-slate-100 dark:border-slate-850 whitespace-pre-line">
-                    {selectedDoc.description || "(Tanpa keterangan)"}
+                    {selectedDoc.description || "(No description)"}
                   </div>
                 </div>
 
@@ -765,7 +818,7 @@ const Documentation = () => {
                         variant="outline"
                         className="flex items-center gap-1.5 text-xs font-semibold h-9 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-250 dark:border-rose-900/30"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Hapus
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
                       </Button>
                     </div>
                   ) : (
@@ -775,7 +828,7 @@ const Documentation = () => {
                     onClick={() => setIsDetailModalOpen(false)}
                     className="h-9 text-xs font-semibold"
                   >
-                    Tutup
+                    Close
                   </Button>
                 </div>
               </div>

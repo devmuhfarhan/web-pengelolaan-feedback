@@ -215,7 +215,7 @@ const Register = () => {
                 >
                   I agree to the{" "}
                   <span className="text-primary font-bold">
-                    Terms of Stewardship
+                    Terms of Puspadi Bali
                   </span>{" "}
                   and{" "}
                   <span className="text-primary font-bold">
@@ -253,7 +253,7 @@ const Register = () => {
 
             <div className="text-[9px] text-slate-400 flex flex-col items-center gap-1">
               <p>
-                &copy; {new Date().getFullYear()} NGO Stewardship Systems. All
+                &copy; {new Date().getFullYear()} Puspadi Bali. All
                 Rights Reserved.
               </p>
               <div className="flex gap-4">

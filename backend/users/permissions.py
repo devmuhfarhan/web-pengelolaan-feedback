@@ -30,7 +30,21 @@ class IsStaffOperationalOrLapanganOrManager(permissions.BasePermission):
 
 
 
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role == 'ADMIN')
+
 class IsStaffOperationalOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and request.user.role == 'STAFF_LAPANGAN')
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(request.user and request.user.is_authenticated and request.user.role in ['STAFF_OPERATIONAL', 'MANAGER', 'ADMIN'])
+
+class IsAdminOrManager(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role in ['ADMIN', 'MANAGER'])
+
+class IsAdminOrManagerOrStaffOperational(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role in ['ADMIN', 'MANAGER', 'STAFF_OPERATIONAL'])
 

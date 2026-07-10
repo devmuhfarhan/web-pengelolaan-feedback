@@ -13,8 +13,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
-import pymysql
-pymysql.install_as_MySQLdb()
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -140,7 +144,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 CORS_ALLOWED_ORIGINS = [
+
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
@@ -159,8 +169,8 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Stewardship Portal API',
-    'DESCRIPTION': 'API documentation for Stewardship Portal',
+    'TITLE': 'Puspadi Bali Portal API',
+    'DESCRIPTION': 'API documentation for Puspadi Bali Portal',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }

@@ -50,7 +50,7 @@ const Login = () => {
               Welcome Back
             </CardTitle>
             <CardDescription className="text-sm text-slate-500">
-              Log in to the Stewardship Portal to continue monitoring impact.
+              Log in to the Puspadi Bali Portal to continue monitoring impact.
             </CardDescription>
           </CardHeader>
           <CardContent>

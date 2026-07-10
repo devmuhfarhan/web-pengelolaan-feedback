@@ -15,6 +15,9 @@ import {
   Users,
   Camera,
   UploadCloud,
+  List,
+  Activity,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar,
@@ -55,13 +58,14 @@ const Layout = () => {
         "STAFF_LAPANGAN",
         "STAFF_OPERATIONAL",
         "PENERIMA_MANFAAT",
+        "ADMIN",
       ],
     },
     {
       label: "Programs",
       path: "/programs",
       icon: FileText,
-      roles: ["MANAGER", "STAFF_OPERATIONAL", "STAFF_LAPANGAN"],
+      roles: ["MANAGER", "STAFF_OPERATIONAL", "STAFF_LAPANGAN", "ADMIN"],
     },
     {
       label: "Feedbacks",
@@ -72,19 +76,38 @@ const Layout = () => {
         "STAFF_OPERATIONAL",
         "STAFF_LAPANGAN",
         "PENERIMA_MANFAAT",
+        "ADMIN",
       ],
     },
     {
-      label: "Data Penerima",
+      label: "Beneficiaries",
       path: "/beneficiaries",
       icon: Users,
-      roles: ["STAFF_LAPANGAN"],
+      roles: ["STAFF_LAPANGAN", "ADMIN"],
     },
     {
-      label: "Dokumentasi Lapangan",
+      label: "Field Documentation",
       path: "/documentation",
       icon: Camera,
-      roles: ["STAFF_LAPANGAN"],
+      roles: ["STAFF_LAPANGAN", "ADMIN"],
+    },
+    {
+      label: "Users Management",
+      path: "/users",
+      icon: List,
+      roles: ["ADMIN"],
+    },
+    {
+      label: "Activity Logs",
+      path: "/activity-logs",
+      icon: Activity,
+      roles: ["ADMIN"],
+    },
+    {
+      label: "Feedback Categories",
+      path: "/feedback-categories",
+      icon: Settings,
+      roles: ["ADMIN"],
     },
   ].filter((item) => item.roles.includes(user?.role));
 

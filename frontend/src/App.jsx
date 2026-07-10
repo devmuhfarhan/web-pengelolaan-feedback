@@ -11,6 +11,9 @@ import Beneficiaries from "@/pages/Beneficiaries";
 import Documentation from "@/pages/Documentation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { LoadingScreen } from "@/components/ui/Loading";
+import Users from "@/pages/Users";
+import ActivityLogs from "@/pages/ActivityLogs";
+import FeedbackCategories from "@/pages/FeedbackCategories";
 
 function App() {
   const { fetchUser, isLoading } = useAuthStore();
@@ -78,9 +81,37 @@ function App() {
               <ProtectedRoute
                 allowedRoles={[
                   "STAFF_LAPANGAN",
+                  "ADMIN",
                 ]}
               >
                 <Beneficiaries />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="users"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="activity-logs"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <ActivityLogs />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="feedback-categories"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <FeedbackCategories />
               </ProtectedRoute>
             }
           />
