@@ -11,6 +11,14 @@ class FeedbackCategory(models.Model):
     def __str__(self):
         return self.name
 
+class FeedbackQuestion(models.Model):
+    text = models.CharField(max_length=500)
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.text
+
 class Feedback(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'

@@ -13,7 +13,6 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { LoadingScreen } from "@/components/ui/Loading";
 import Users from "@/pages/Users";
 import ActivityLogs from "@/pages/ActivityLogs";
-import FeedbackCategories from "@/pages/FeedbackCategories";
 
 function App() {
   const { fetchUser, isLoading } = useAuthStore();
@@ -50,8 +49,9 @@ function App() {
               <ProtectedRoute
                 allowedRoles={[
                   "MANAGER",
-                  "STAFF_OPERATIONAL",
-                  "STAFF_LAPANGAN",
+                  "OPERATIONAL_STAFF",
+                  "FIELD_STAFF",
+                  "ADMIN",
                 ]}
               >
                 <Programs />
@@ -65,9 +65,10 @@ function App() {
               <ProtectedRoute
                 allowedRoles={[
                   "MANAGER",
-                  "STAFF_OPERATIONAL",
-                  "STAFF_LAPANGAN",
-                  "PENERIMA_MANFAAT",
+                  "OPERATIONAL_STAFF",
+                  "FIELD_STAFF",
+                  "BENEFICIARY",
+                  "ADMIN",
                 ]}
               >
                 <Feedbacks />
@@ -78,12 +79,7 @@ function App() {
           <Route
             path="beneficiaries"
             element={
-              <ProtectedRoute
-                allowedRoles={[
-                  "STAFF_LAPANGAN",
-                  "ADMIN",
-                ]}
-              >
+              <ProtectedRoute allowedRoles={["FIELD_STAFF", "ADMIN"]}>
                 <Beneficiaries />
               </ProtectedRoute>
             }
@@ -107,23 +103,19 @@ function App() {
             }
           />
 
-          <Route
+          {/* <Route
             path="feedback-categories"
             element={
               <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <FeedbackCategories />
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           <Route
             path="documentation"
             element={
-              <ProtectedRoute
-                allowedRoles={[
-                  "STAFF_LAPANGAN",
-                ]}
-              >
+              <ProtectedRoute allowedRoles={["FIELD_STAFF", "ADMIN"]}>
                 <Documentation />
               </ProtectedRoute>
             }

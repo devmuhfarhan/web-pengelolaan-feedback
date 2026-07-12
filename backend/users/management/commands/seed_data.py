@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from programs.models import Program
-from feedbacks.models import Feedback
+from feedbacks.models import Feedback, FeedbackQuestion
 from users.models import BeneficiaryData
 from django.utils import timezone
 from datetime import timedelta
@@ -10,7 +10,7 @@ User = get_user_model()
 
 USERS = [
     {
-        'username': 'manager01',
+        'username': 'manager_01',
         'password': 'Password123!',
         'email': 'manager01@puspadibali.org',
         'first_name': 'Budi',
@@ -19,93 +19,166 @@ USERS = [
         'phone_number': '081200000001',
     },
     {
-        'username': 'staff_lapangan01',
+        'username': 'field_staff_01',
         'password': 'Password123!',
-        'email': 'lapangan01@puspadibali.org',
+        'email': 'field_staff_01@puspadibali.org',
         'first_name': 'Agus',
         'last_name': 'Prasetyo',
-        'role': 'STAFF_LAPANGAN',
+        'role': 'FIELD_STAFF',
         'phone_number': '081200000002',
     },
     {
-        'username': 'staff_lapangan02',
+        'username': 'field_staff_02',
         'password': 'Password123!',
-        'email': 'lapangan02@puspadibali.org',
+        'email': 'field_staff_02@puspadibali.org',
         'first_name': 'Rina',
         'last_name': 'Wulandari',
-        'role': 'STAFF_LAPANGAN',
+        'role': 'FIELD_STAFF',
         'phone_number': '081200000003',
     },
     {
-        'username': 'staff_ops01',
+        'username': 'operational_staff_01',
         'password': 'Password123!',
-        'email': 'ops01@puspadibali.org',
+        'email': 'operational_staff_01@puspadibali.org',
         'first_name': 'Dewi',
         'last_name': 'Kurniasari',
-        'role': 'STAFF_OPERATIONAL',
+        'role': 'OPERATIONAL_STAFF',
         'phone_number': '081200000004',
     },
     {
-        'username': 'penerima01',
+        'username': 'beneficiary_01',
         'password': 'Password123!',
-        'email': 'penerima01@puspadibali.org',
+        'email': 'beneficiary_01@puspadibali.org',
         'first_name': 'Siti',
         'last_name': 'Aminah',
-        'role': 'PENERIMA_MANFAAT',
+        'role': 'BENEFICIARY',
         'phone_number': '081200000005',
     },
     {
-        'username': 'penerima02',
+        'username': 'beneficiary_02',
         'password': 'Password123!',
-        'email': 'penerima02@puspadibali.org',
-        'first_name': 'Joko',
-        'last_name': 'Widodo',
-        'role': 'PENERIMA_MANFAAT',
+        'email': 'beneficiary_02@puspadibali.org',
+        'first_name': 'John',
+        'last_name': 'Doe',
+        'role': 'BENEFICIARY',
         'phone_number': '081200000006',
     },
     {
-        'username': 'penerima03',
+        'username': 'beneficiary_03',
         'password': 'Password123!',
-        'email': 'penerima03@puspadibali.org',
+        'email': 'beneficiary_03@puspadibali.org',
         'first_name': 'Hana',
         'last_name': 'Pertiwi',
-        'role': 'PENERIMA_MANFAAT',
+        'role': 'BENEFICIARY',
         'phone_number': '081200000007',
+    },
+    {
+        'username': 'admin_puspadi',
+        'password': 'Password123!',
+        'email': 'admin@puspadibali.org',
+        'first_name': 'Admin',
+        'last_name': 'Puspadi',
+        'role': 'ADMIN',
+        'phone_number': '081200000008',
     },
 ]
 
 PROGRAMS = [
     {
-        'title': 'Rehabilitation',
-        'description': 'PUSPADI Bali provides Adaptive Wheelchairs, Prosthetics & Orthotics as well as other mobility aids free of charge to our clients. We fund 100% of the costs incurred to carry out treatment which includes rehabilitation and any other follow-up procedures to ensure effective treatment.',
-        'start_date': '2025-01-01',
-        'end_date': '2025-12-31',
-        'status': 'ONGOING',
-        'target_beneficiaries': 200,
-    },
-    {
-        'title': 'Education',
-        'description': 'Through consultation with partner organizations, Puspadi Bali helps to facilitate access to education for children with physical disabilities.',
-        'start_date': '2025-01-01',
-        'end_date': '2025-12-31',
-        'status': 'ONGOING',
-        'target_beneficiaries': 150,
-    },
-    {
-        'title': 'Training & Empowerment',
-        'description': 'PUSPADI Bali creates a sustainable infrastructure to help people with disabilities in Bali recognize and fulfill their potential in society and the workplace. We do this by providing personal and professional development courses, as well as offering support that will enable people with disabilities to seek employment and take practical steps towards economic independence and personal empowerment.',
+        'title': 'Prosthetics & Orthotics',
+        'description': 'Provides customized prosthetic and orthotic solutions to improve mobility, physical function, and independence, enabling people with disabilities to participate more actively in their daily lives.',
         'start_date': '2025-01-01',
         'end_date': '2025-12-31',
         'status': 'ONGOING',
         'target_beneficiaries': 100,
     },
     {
-        'title': 'Advocacy',
-        'description': 'PUSPADI Bali aims to raise awareness about disability issues within the community and challenge common misconceptions and cultural beliefs about disability. This is done through increasing the participation and visibility of people with disabilities.',
+        'title': 'Adaptive Wheelchair',
+        'description': 'Provides individually customized adaptive wheelchairs designed to enhance mobility, comfort, safety, and independence according to each beneficiary\'s specific needs.',
         'start_date': '2025-01-01',
         'end_date': '2025-12-31',
         'status': 'ONGOING',
-        'target_beneficiaries': 300,
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Physiotherapy',
+        'description': 'Delivers professional physiotherapy services that support physical rehabilitation, improve functional abilities, reduce physical limitations, and promote long-term well-being.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Corrective Operations Referral and Support',
+        'description': 'Facilitates access to corrective surgical services by coordinating medical referrals, providing guidance throughout the treatment process, and supporting post-operative recovery.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Accessible Home Project',
+        'description': 'Improves the accessibility of beneficiaries\' homes through practical modifications that create safer, more inclusive, and independent living environments.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Scholarships',
+        'description': 'Provides educational scholarships to support students with disabilities in accessing quality education, promoting equal opportunities, and encouraging lifelong learning.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Vocational Training',
+        'description': 'Provides vocational training programs that develop practical skills, increase employability, and support sustainable economic independence for beneficiaries.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Soft Skills Training',
+        'description': 'Enhances essential interpersonal and professional competencies, including communication, teamwork, leadership, problem-solving, and self-confidence, to prepare beneficiaries for personal and professional success.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Work Experience',
+        'description': 'Offers practical workplace experience through structured placements, enabling beneficiaries to develop professional competencies, gain confidence, and adapt to real working environments.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Job Placement',
+        'description': 'Connects beneficiaries with inclusive employment opportunities by facilitating job matching, employer engagement, and career support based on their individual skills and potential.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Voicing the Rights of People with Disabilities',
+        'description': 'Advocates for the rights of people with disabilities by promoting equal opportunities, accessibility, inclusive policies, and meaningful participation within society.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
+    },
+    {
+        'title': 'Real Action for Public Awareness',
+        'description': 'Conducts awareness campaigns and community engagement initiatives to foster greater public understanding, reduce stigma, and promote an inclusive society for people with disabilities.',
+        'start_date': '2025-01-01',
+        'end_date': '2025-12-31',
+        'status': 'ONGOING',
+        'target_beneficiaries': 100,
     },
 ]
 
@@ -139,7 +212,7 @@ class Command(BaseCommand):
             created_users[data['username']] = user
 
         # Get the manager user as the program manager
-        manager_user = created_users.get('manager01')
+        manager_user = created_users.get('manager_01')
 
         # --- Create Programs ---
         self.stdout.write('\n[*] Creating programs...')
@@ -162,113 +235,31 @@ class Command(BaseCommand):
                 self.stdout.write(f'  [--] Skipped (exists): {prog_data["title"][:55]}')
             created_programs.append(program)
 
-        # --- Update Beneficiary profiles ---
-        self.stdout.write('\n[*] Updating beneficiary profile data...')
-        penerima1 = created_users.get('penerima01')
-        if penerima1 and len(created_programs) > 0:
-            penerima1.birth_date = '1995-04-12'
-            penerima1.gender = 'P'
-            penerima1.program = created_programs[0]
-            penerima1.date_provided = '2024-01-20'
-            penerima1.save()
-            self.stdout.write(self.style.SUCCESS('  [OK] Profile info for penerima01'))
-
-        penerima2 = created_users.get('penerima02')
-        if penerima2 and len(created_programs) > 1:
-            penerima2.birth_date = '1988-11-23'
-            penerima2.gender = 'L'
-            penerima2.program = created_programs[1]
-            penerima2.date_provided = '2025-02-05'
-            penerima2.save()
-            self.stdout.write(self.style.SUCCESS('  [OK] Profile info for penerima02'))
-
-        penerima3 = created_users.get('penerima03')
-        if penerima3 and len(created_programs) > 2:
-            penerima3.birth_date = '2001-07-05'
-            penerima3.gender = 'P'
-            penerima3.program = created_programs[2]
-            penerima3.date_provided = '2025-04-10'
-            penerima3.save()
-            self.stdout.write(self.style.SUCCESS('  [OK] Profile info for penerima03'))
-
-        # --- Create Feedbacks ---
-        self.stdout.write('\n[*] Creating feedbacks...')
-        import json
-        dummy_answers_1 = json.dumps({
-            "q1": 4, "q2": 4, "q3": 4, "q4": 3, "q5": 4,
-            "q6": 3, "q7": 4, "q8": 4, "q9": 4, "q10": 4
-        })
-        dummy_answers_2 = json.dumps({
-            "q1": 3, "q2": 3, "q3": 4, "q4": 4, "q5": 3,
-            "q6": 3, "q7": 3, "q8": 3, "q9": 4, "q10": 3
-        })
-        feedbacks_data = [
-            {
-                'user': created_users['penerima01'],
-                'program': created_programs[0],
-                'content': dummy_answers_1,
-                'rating': 4,
-                'status': 'RESOLVED',
-            },
-            {
-                'user': created_users['penerima02'],
-                'program': created_programs[1],
-                'content': dummy_answers_2,
-                'rating': 3,
-                'status': 'REVIEWED',
-            },
+        # --- Create Feedback Questions ---
+        self.stdout.write('\n[*] Creating feedback questions...')
+        questions = [
+            "1. Were the facilities and service environment provided by PUSPADI Bali comfortable and accessible?",
+            "2. Did the team provide adequate support during the service/training process?",
+            "3. Did the service run efficiently and according to the promised timeline?",
+            "4. How useful were the training and services provided for your daily life?",
+            "5. Did the team communicate information clearly and comprehensively?",
+            "6. Is the provided mobility aid or equipment in good condition and functioning properly?",
+            "7. Were you involved in the decision-making process regarding the service or equipment provided?",
+            "8. Did the team respond to your complaints and needs quickly and appropriately?",
+            "9. Do you feel more independent after receiving services from PUSPADI Bali?",
+            "10. Are you satisfied with the overall service provided by PUSPADI Bali?",
         ]
-
-        for fb_data in feedbacks_data:
-            exists = Feedback.objects.filter(
-                user=fb_data['user'],
-                program=fb_data['program'],
-            ).exists()
-
-            if not exists:
-                Feedback.objects.create(
-                    user=fb_data['user'],
-                    program=fb_data['program'],
-                    content=fb_data['content'],
-                    rating=fb_data['rating'],
-                    status=fb_data['status'],
-                )
-                self.stdout.write(self.style.SUCCESS(
-                    f'  [OK] Feedback from {fb_data["user"].username} for "{fb_data["program"].title[:30]}..."'
-                ))
+        for idx, q_text in enumerate(questions):
+            q, created = FeedbackQuestion.objects.get_or_create(text=q_text, defaults={'order': idx + 1})
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  [OK] Question {idx+1}'))
             else:
-                self.stdout.write(f'  [--] Skipped feedback: {fb_data["user"].username}')
-
-        self.stdout.write(self.style.SUCCESS('\n[*] Creating beneficiary data...'))
-        beneficiaries_data = [
-            {
-                'lokasi': 'Kec. Bojonggede, Bogor',
-                'status': 'VERIFIED',
-            },
-            {
-                'lokasi': 'Desa Sukamaju, Bandung',
-                'status': 'INCOMPLETE',
-            },
-            {
-                'lokasi': 'Kel. Jaya, Sukabumi',
-                'status': 'PENDING',
-            },
-        ]
-
-        for ben_data in beneficiaries_data:
-            exists = BeneficiaryData.objects.filter(lokasi=ben_data['lokasi']).exists()
-            if not exists:
-                BeneficiaryData.objects.create(
-                    lokasi=ben_data['lokasi'],
-                    status=ben_data['status']
-                )
-                self.stdout.write(self.style.SUCCESS(f"  [OK] Beneficiary Location: {ben_data['lokasi']}"))
-            else:
-                self.stdout.write(f"  [--] Skipped location: {ben_data['lokasi']}")
+                self.stdout.write(f'  [--] Skipped (exists): Question {idx+1}')
 
         self.stdout.write(self.style.SUCCESS('\n[DONE] Seeding complete!\n'))
         self.stdout.write(self.style.WARNING('Login credentials (password: Password123!)'))
-        self.stdout.write('  MANAGER           -> manager01')
-        self.stdout.write('  STAFF_LAPANGAN    -> staff_lapangan01, staff_lapangan02')
-        self.stdout.write('  STAFF_OPERATIONAL -> staff_ops01')
-        self.stdout.write('  PENERIMA_MANFAAT  -> penerima01, penerima02, penerima03')
+        self.stdout.write('  MANAGER           -> manager_01')
+        self.stdout.write('  FIELD_STAFF    -> field_staff_01, field_staff_02')
+        self.stdout.write('  OPERATIONAL_STAFF -> operational_staff_01')
+        self.stdout.write('  BENEFICIARY  -> beneficiary_01, beneficiary_02, beneficiary_03')
+        self.stdout.write('  ADMIN             -> admin_puspadi')

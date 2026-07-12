@@ -10,6 +10,8 @@ from drf_spectacular.utils import extend_schema
 from .serializers import UserSerializer, RegisterSerializer, BeneficiaryDataSerializer, ActivityLogSerializer
 from .models import User, ActivityLog
 from .permissions import IsStaffOperationalOrReadOnly, IsAdmin
+import secrets
+import string
 
 class CookieTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -122,11 +124,47 @@ class RegisterView(APIView):
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ForgotPasswordView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        identifier = request.data.get('username', '').strip()
+        new_password = request.data.get('new_password', '').strip()
+
+        if not identifier:
+            return Response({'error': 'Username or email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not new_password:
+            return Response({'error': 'New password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(new_password) < 8:
+            return Response({'error': 'Password must be at least 8 characters.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Try to find user by username or email
+        user = None
+        try:
+            user = User.objects.get(username=identifier)
+        except User.DoesNotExist:
+            try:
+                user = User.objects.get(email=identifier)
+            except User.DoesNotExist:
+                pass
+
+        if user is None:
+            return Response({'error': 'No account found with that username or email.'}, status=status.HTTP_404_NOT_FOUND)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({
+            'message': 'Password has been reset successfully.',
+            'username': user.username,
+        }, status=status.HTTP_200_OK)
+
 from rest_framework.decorators import action
 from .models import BeneficiaryReplacement
 
 class BeneficiaryDataViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.filter(role='PENERIMA_MANFAAT').order_by('-id')
+    queryset = User.objects.filter(role='BENEFICIARY').order_by('-id')
     serializer_class = BeneficiaryDataSerializer
     permission_classes = [IsStaffOperationalOrReadOnly]
 

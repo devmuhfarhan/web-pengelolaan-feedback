@@ -15,7 +15,7 @@ import {
   Plus,
   CheckCircle2,
   Link as LinkIcon,
-  Info
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +39,7 @@ const BACKEND_URL = "http://127.0.0.1:8000";
 
 const Documentation = () => {
   const { user } = useAuthStore();
-  const canUpload = user?.role === "STAFF_LAPANGAN";
+  const canUpload = user?.role === "FIELD_STAFF";
   const editFileInputRef = useRef(null);
   const uploadFileInputRef = useRef(null);
 
@@ -85,10 +85,10 @@ const Documentation = () => {
     try {
       const response = await api.get("/programs/documentations/");
       setDocumentations(response.data);
-      
+
       // Update selectedDoc if it is open
       if (selectedDoc) {
-        const updated = response.data.find(d => d.id === selectedDoc.id);
+        const updated = response.data.find((d) => d.id === selectedDoc.id);
         if (updated) {
           setSelectedDoc(updated);
         }
@@ -140,8 +140,14 @@ const Documentation = () => {
         return;
       }
       const allowedTypes = ["image/jpeg", "image/jpg"];
-      if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith(".jpg") && !file.name.toLowerCase().endsWith(".jpeg")) {
-        setEditError("Unsupported file format. Please upload JPG or JPEG format only.");
+      if (
+        !allowedTypes.includes(file.type) &&
+        !file.name.toLowerCase().endsWith(".jpg") &&
+        !file.name.toLowerCase().endsWith(".jpeg")
+      ) {
+        setEditError(
+          "Unsupported file format. Please upload JPG or JPEG format only.",
+        );
         return;
       }
       setEditFile(file);
@@ -209,8 +215,14 @@ const Documentation = () => {
         return;
       }
       const allowedTypes = ["image/jpeg", "image/jpg"];
-      if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith(".jpg") && !file.name.toLowerCase().endsWith(".jpeg")) {
-        setUploadError("Unsupported file format. Please upload JPG or JPEG format only.");
+      if (
+        !allowedTypes.includes(file.type) &&
+        !file.name.toLowerCase().endsWith(".jpg") &&
+        !file.name.toLowerCase().endsWith(".jpeg")
+      ) {
+        setUploadError(
+          "Unsupported file format. Please upload JPG or JPEG format only.",
+        );
         return;
       }
       setUploadFile(file);
@@ -227,7 +239,9 @@ const Documentation = () => {
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
     if (!uploadFile && !uploadDriveLink.trim()) {
-      setUploadError("Please select a JPG photo file or enter a Google Drive link.");
+      setUploadError(
+        "Please select a JPG photo file or enter a Google Drive link.",
+      );
       return;
     }
 
@@ -266,7 +280,9 @@ const Documentation = () => {
       }, 1000);
     } catch (error) {
       console.error("Error uploading general documentation:", error);
-      setUploadError("Failed to upload general documentation. Please try again.");
+      setUploadError(
+        "Failed to upload general documentation. Please try again.",
+      );
     } finally {
       setUploadSubmitting(false);
     }
@@ -375,7 +391,8 @@ const Documentation = () => {
                   {/* Drive Link Input Option */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                      <LinkIcon className="w-3.5 h-3.5 text-slate-400" /> Google Drive Link (Alternative)
+                      <LinkIcon className="w-3.5 h-3.5 text-slate-400" /> Google
+                      Drive Link (Alternative)
                     </label>
                     <Input
                       placeholder="https://drive.google.com/..."
@@ -383,7 +400,9 @@ const Documentation = () => {
                       onChange={(e) => setUploadDriveLink(e.target.value)}
                       className="h-10 text-xs rounded-lg"
                     />
-                    <p className="text-[10px] text-slate-400">Enter Drive link to save internal storage.</p>
+                    <p className="text-[10px] text-slate-400">
+                      Enter Drive link to save internal storage.
+                    </p>
                   </div>
                 </div>
 
@@ -435,7 +454,9 @@ const Documentation = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-sm text-slate-500">Loading documentation photos...</p>
+            <p className="text-sm text-slate-500">
+              Loading documentation photos...
+            </p>
           </div>
         ) : documentations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-2">
@@ -444,13 +465,15 @@ const Documentation = () => {
               No documentation photos yet
             </p>
             <p className="text-sm text-slate-400 text-center max-w-sm">
-              No photo evidence of field program implementation has been uploaded yet.
+              No photo evidence of field program implementation has been
+              uploaded yet.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {documentations.map((doc) => {
-              const isImage = doc.file && !doc.file.toLowerCase().endsWith(".pdf");
+              const isImage =
+                doc.file && !doc.file.toLowerCase().endsWith(".pdf");
 
               return (
                 <div
@@ -488,9 +511,7 @@ const Documentation = () => {
                     ) : (
                       <div className="flex flex-col items-center gap-2 text-slate-400">
                         <Info className="w-12 h-12" />
-                        <span className="text-xs font-semibold">
-                          No file
-                        </span>
+                        <span className="text-xs font-semibold">No file</span>
                       </div>
                     )}
 
@@ -510,7 +531,10 @@ const Documentation = () => {
                   {/* Content Area */}
                   <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                      {doc.description || (doc.drive_link ? "Google Drive Link" : "(No description)")}
+                      {doc.description ||
+                        (doc.drive_link
+                          ? "Google Drive Link"
+                          : "(No description)")}
                     </p>
 
                     {/* Footer Details */}
@@ -726,13 +750,16 @@ const Documentation = () => {
                     >
                       <LinkIcon className="w-16 h-16 mb-2 text-blue-500" />
                       <span className="text-sm font-bold flex items-center gap-1">
-                        Open Google Drive Link <ExternalLink className="w-4 h-4" />
+                        Open Google Drive Link{" "}
+                        <ExternalLink className="w-4 h-4" />
                       </span>
                     </a>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-slate-400">
                       <Info className="w-16 h-16 mb-2" />
-                      <span className="text-sm font-semibold">No file/drive link</span>
+                      <span className="text-sm font-semibold">
+                        No file/drive link
+                      </span>
                     </div>
                   )}
                 </div>
@@ -780,10 +807,10 @@ const Documentation = () => {
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         Google Drive Link
                       </span>
-                      <a 
-                        href={selectedDoc.drive_link} 
-                        target="_blank" 
-                        rel="noreferrer" 
+                      <a
+                        href={selectedDoc.drive_link}
+                        target="_blank"
+                        rel="noreferrer"
                         className="text-xs font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1 mt-0.5"
                       >
                         <ExternalLink className="w-3.5 h-3.5" /> Open Drive Link

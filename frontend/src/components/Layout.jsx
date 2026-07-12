@@ -55,9 +55,9 @@ const Layout = () => {
       icon: LayoutDashboard,
       roles: [
         "MANAGER",
-        "STAFF_LAPANGAN",
-        "STAFF_OPERATIONAL",
-        "PENERIMA_MANFAAT",
+        "FIELD_STAFF",
+        "OPERATIONAL_STAFF",
+        "BENEFICIARY",
         "ADMIN",
       ],
     },
@@ -65,7 +65,7 @@ const Layout = () => {
       label: "Programs",
       path: "/programs",
       icon: FileText,
-      roles: ["MANAGER", "STAFF_OPERATIONAL", "STAFF_LAPANGAN", "ADMIN"],
+      roles: ["MANAGER", "OPERATIONAL_STAFF", "FIELD_STAFF", "ADMIN"],
     },
     {
       label: "Feedbacks",
@@ -73,9 +73,9 @@ const Layout = () => {
       icon: MessageSquare,
       roles: [
         "MANAGER",
-        "STAFF_OPERATIONAL",
-        "STAFF_LAPANGAN",
-        "PENERIMA_MANFAAT",
+        "OPERATIONAL_STAFF",
+        "FIELD_STAFF",
+        "BENEFICIARY",
         "ADMIN",
       ],
     },
@@ -83,13 +83,13 @@ const Layout = () => {
       label: "Beneficiaries",
       path: "/beneficiaries",
       icon: Users,
-      roles: ["STAFF_LAPANGAN", "ADMIN"],
+      roles: ["FIELD_STAFF", "ADMIN"],
     },
     {
       label: "Field Documentation",
       path: "/documentation",
       icon: Camera,
-      roles: ["STAFF_LAPANGAN", "ADMIN"],
+      roles: ["FIELD_STAFF", "ADMIN"],
     },
     {
       label: "Users Management",
@@ -103,12 +103,12 @@ const Layout = () => {
       icon: Activity,
       roles: ["ADMIN"],
     },
-    {
-      label: "Feedback Categories",
-      path: "/feedback-categories",
-      icon: Settings,
-      roles: ["ADMIN"],
-    },
+    // {
+    //   label: "Feedback Categories",
+    //   path: "/feedback-categories",
+    //   icon: Settings,
+    //   roles: ["ADMIN"],
+    // },
   ].filter((item) => item.roles.includes(user?.role));
 
   return (

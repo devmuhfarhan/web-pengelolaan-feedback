@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='role',
-            field=models.CharField(choices=[('ADMIN', 'Admin'), ('STAFF_LAPANGAN', 'Staff Lapangan'), ('MANAGER', 'Manager'), ('STAFF_OPERATIONAL', 'Staff Operational'), ('PENERIMA_MANFAAT', 'Penerima Manfaat')], default='PENERIMA_MANFAAT', max_length=50),
+            field=models.CharField(choices=[('ADMIN', 'Admin'), ('FIELD_STAFF', 'Field Staff'), ('MANAGER', 'Manager'), ('OPERATIONAL_STAFF', 'Operational Staff'), ('BENEFICIARY', 'Beneficiary')], default='BENEFICIARY', max_length=50),
         ),
         migrations.CreateModel(
             name='ActivityLog',

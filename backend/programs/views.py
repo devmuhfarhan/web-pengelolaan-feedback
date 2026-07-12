@@ -70,7 +70,7 @@ class DashboardAPIView(APIView):
             formatted_status.append({'name': name, 'value': item['value']})
 
         # Fetch and serialize recent feedbacks based on role
-        if user.role == 'PENERIMA_MANFAAT':
+        if user.role == 'BENEFICIARY':
             recent_qs = Feedback.objects.filter(user=user).order_by('-created_at')[:5]
         else:
             recent_qs = Feedback.objects.order_by('-created_at')[:5]
@@ -87,7 +87,7 @@ class DashboardAPIView(APIView):
             'status_distribution': formatted_status,
         }
 
-        if user.role == 'PENERIMA_MANFAAT':
+        if user.role == 'BENEFICIARY':
             data['my_feedbacks_count'] = Feedback.objects.filter(user=user).count()
 
         return Response(data)

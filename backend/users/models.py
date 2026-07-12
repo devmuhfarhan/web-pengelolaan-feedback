@@ -4,13 +4,13 @@ from django.db import models
 class User(AbstractUser):
     class Role(models.TextChoices):
         ADMIN = 'ADMIN', 'Admin'
-        STAFF_LAPANGAN = 'STAFF_LAPANGAN', 'Staff Lapangan'
+        FIELD_STAFF = 'FIELD_STAFF', 'Field Staff'
         MANAGER = 'MANAGER', 'Manager'
-        STAFF_OPERATIONAL = 'STAFF_OPERATIONAL', 'Staff Operational'
-        PENERIMA_MANFAAT = 'PENERIMA_MANFAAT', 'Penerima Manfaat'
+        OPERATIONAL_STAFF = 'OPERATIONAL_STAFF', 'Operational Staff'
+        BENEFICIARY = 'BENEFICIARY', 'Beneficiary'
 
 
-    role = models.CharField(max_length=50, choices=Role.choices, default=Role.PENERIMA_MANFAAT)
+    role = models.CharField(max_length=50, choices=Role.choices, default=Role.BENEFICIARY)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     birth_date = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=10, choices=[('L', 'Laki-laki'), ('P', 'Perempuan')], null=True, blank=True)
