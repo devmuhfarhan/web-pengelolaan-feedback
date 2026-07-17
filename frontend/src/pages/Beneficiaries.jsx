@@ -355,7 +355,7 @@ const Beneficiaries = () => {
                     </div>
                   </th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Date Provided</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Date Replaced</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">All Programs</th>
                   {canEditDelete && (
                     <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                   )}
@@ -402,11 +402,26 @@ const Beneficiaries = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">
-                        {item.replacements && item.replacements.length > 0 
-                          ? [...item.replacements].sort((a, b) => new Date(b.date_replaced) - new Date(a.date_replaced))[0].date_replaced 
-                          : item.date_replaced || "-"}
-                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {/* Program utama */}
+                        {item.program_detail && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                            {item.program_detail.title}
+                          </span>
+                        )}
+                        {/* Program dari replacements */}
+                        {item.replacements && item.replacements
+                          .filter(rep => rep.program_detail)
+                          .map(rep => (
+                            <span key={rep.id} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                              {rep.program_detail.title}
+                            </span>
+                          ))
+                        }
+                        {!item.program_detail && (!item.replacements || item.replacements.length === 0) && (
+                          <span className="text-sm text-slate-400">-</span>
+                        )}
+                      </div>
                     </td>
                     {canEditDelete && (
                       <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
@@ -495,38 +510,42 @@ const Beneficiaries = () => {
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Program</span>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{detailBeneficiary.program_detail?.title || "No program"}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><UserCheck className="w-3.5 h-3.5" /> Date Provided</span>
-                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{detailBeneficiary.date_provided || "-"}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><RefreshCw className="w-3.5 h-3.5" /> Replacement History</span>
-                  {detailBeneficiary.replacements && detailBeneficiary.replacements.length > 0 ? (
-                    <ul className="text-sm font-medium text-slate-800 dark:text-slate-200 list-disc list-inside">
-                      {detailBeneficiary.replacements.map(rep => (
-                        <li key={rep.id}>{rep.date_replaced} ({rep.program_detail?.title})</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">-</p>
-                  )}
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Program History</span>
+                  <div className="space-y-2">
+                    {/* Program Utama */}
+                    {detailBeneficiary.program_detail && (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                          {detailBeneficiary.program_detail.title}
+                        </span>
+                        <span className="text-[10px] text-slate-400">({detailBeneficiary.date_provided || "date n/a"})</span>
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-wide">Current</span>
+                      </div>
+                    )}
+                    {/* Program dari replacements */}
+                    {detailBeneficiary.replacements && detailBeneficiary.replacements.length > 0 ? (
+                      detailBeneficiary.replacements.map(rep => (
+                        <div key={rep.id} className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                            {rep.program_detail?.title || "Unknown Program"}
+                          </span>
+                          <span className="text-[10px] text-slate-400">({rep.date_replaced})</span>
+                        </div>
+                      ))
+                    ) : (
+                      !detailBeneficiary.program_detail && <p className="text-sm font-medium text-slate-400">No program assigned</p>
+                    )}
+                  </div>
                   {canManage && (
-                    <Button 
+                    <button 
                       onClick={() => {
                         setSelectedBeneficiary(detailBeneficiary);
                         setIsReplacementModalOpen(true);
                       }} 
-                      size="sm" 
-                      variant="outline" 
-                      className="mt-2 text-xs h-7"
+                      className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 border border-primary/30 hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all"
                     >
-                      + Add Replacement
-                    </Button>
+                      + Add Program
+                    </button>
                   )}
                 </div>
                 
@@ -713,7 +732,7 @@ const Beneficiaries = () => {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
           <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Add Replacement History</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Tambah Program</h3>
               <button
                 onClick={() => setIsReplacementModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold"
@@ -739,8 +758,8 @@ const Beneficiaries = () => {
                   </select>
                 </div>
                 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Replacement Date</label>
+                                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Tanggal Mulai Program</label>
                   <input
                     type="date"
                     required

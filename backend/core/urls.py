@@ -15,9 +15,16 @@ urlpatterns = [
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
 
-# Serve documentations upload folder
+# Serve documentations upload folder (legacy)
 urlpatterns += [
     re_path(r'^documentations/(?P<path>.*)$', serve, {
         'document_root': settings.BASE_DIR / 'documentations',
+    }),
+]
+
+# Serve media files (photos uploaded via the app)
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {
+        'document_root': settings.MEDIA_ROOT,
     }),
 ]

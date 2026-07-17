@@ -23,7 +23,7 @@ class Program(models.Model):
 
 class Documentation(models.Model):
     program = models.ForeignKey(Program, on_delete=models.SET_NULL, null=True, blank=True, related_name='documentations')
-    file = models.FileField(upload_to='documentations/', null=True, blank=True)
+    file = models.ImageField(upload_to='documentations/', null=True, blank=True)
     drive_link = models.URLField(max_length=500, blank=True, null=True)
     description = models.CharField(max_length=255, blank=True)
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)

@@ -146,3 +146,65 @@ Untuk mempermudah verifikasi hasil pengerjaan (Sesuai Revisi Klien Terakhir), be
    - Dummy data untuk program telah dihapus.
    - Aplikasi di-seed menggunakan set data program asli Puspadi (cth: _Rehabilitasi, Pendidikan, Pelatihan & Pemberdayaan, Advokasi_) ketika script `seed_data` dieksekusi. 
 
+5. **Multi-Program Penerima Manfaat**:
+   - Satu penerima manfaat kini bisa terdaftar di beberapa program sekaligus tanpa duplikasi nama.
+   - Dari detail data penerima, klik tombol **"Tambah Program"** untuk mendaftarkan program baru.
+   - Di tabel, kolom **"All Programs"** menampilkan semua program sebagai badge.
+
+---
+
+## 🌐 OPSYEN C: Deploy ke cPanel (Production Hosting)
+
+### Setup Backend di cPanel
+
+1. **Upload** folder `backend/` ke server cPanel via File Manager atau Git.
+
+2. **Buat file `.env`** di dalam folder `backend/` (lihat `backend/.env.example`):
+   ```
+   SECRET_KEY=your-very-long-random-secret-key
+   DEBUG=False
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_NAME=nama_database_cpanel
+   DB_USER=user_database_cpanel
+   DB_PASSWORD=password_database
+   CORS_ALLOWED_ORIGINS=https://domain-frontend-anda.com
+   ```
+
+3. **Install dependencies** via SSH/Terminal cPanel:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Jalankan migrasi**:
+   ```bash
+   python manage.py migrate
+   python manage.py seed_data
+   python manage.py collectstatic --noinput
+   ```
+
+5. **Folder media** (untuk foto yang diupload):
+   - Foto akan tersimpan otomatis di `backend/media/documentations/`
+   - Pastikan folder `backend/media/` memiliki permission write (755)
+
+### Setup Frontend di cPanel
+
+1. **Buat file `.env`** di folder `frontend/` (lihat `frontend/.env.example`):
+   ```
+   VITE_API_BASE_URL=https://api.domain-anda.com/api
+   VITE_BACKEND_URL=https://api.domain-anda.com
+   ```
+
+2. **Build frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   ```
+
+3. **Upload hasil build** — Isi folder `frontend/dist/` ke `public_html` cPanel.
+
+### ⚠️ Penting untuk Upload Foto di cPanel
+- Backend Django menyimpan foto ke folder `backend/media/documentations/`
+- URL foto otomatis menggunakan `VITE_BACKEND_URL` dari file `.env` frontend
+- Pastikan `ALLOWED_HOSTS` di settings menyertakan domain server, atau biarkan `['*']`
