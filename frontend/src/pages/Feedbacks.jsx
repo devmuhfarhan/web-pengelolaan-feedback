@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import useAuthStore from "@/store/authStore";
 import api from "@/lib/axios";
-import { MessageSquare, Star, CheckCircle, Shield, Clock } from "lucide-react";
+import { MessageSquare, Star, CheckCircle, Shield, Clock, Plus, Edit2, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,6 +10,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -33,29 +34,141 @@ const QUESTION_LABELS = {
   q10: "Overall Satisfaction",
 };
 
+
+const AdminQuestionsManager = ({ questions, fetchQuestions }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentQ, setCurrentQ] = useState(null);
+  const [text, setText] = useState("");
+  const [order, setOrder] = useState(0);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (currentQ) {
+      await api.patch(`/feedbacks/feedback-questions/${currentQ.id}/`, { text, order });
+    } else {
+      await api.post(`/feedbacks/feedback-questions/`, { text, order });
+    }
+    setIsEditing(false);
+    fetchQuestions();
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm("Are you sure you want to delete this question?")) {
+      await api.delete(`/feedbacks/feedback-questions/${id}/`);
+      fetchQuestions();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Feedback Questions Management</h1>
+          <p className="text-slate-500 text-sm">Manage dynamic questions for beneficiary feedback surveys.</p>
+        </div>
+        <Button onClick={() => { setCurrentQ(null); setText(""); setOrder(questions.length + 1); setIsEditing(true); }}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Question
+        </Button>
+      </div>
+      
+      <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900">
+        <CardContent className="p-0">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {questions.map((q) => (
+              <div key={q.id} className="flex items-start justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <div>
+                  <span className="inline-block px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded text-xs font-bold mr-3">
+                    Order: {q.order}
+                  </span>
+                  <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{q.text}</span>
+                </div>
+                <div className="flex items-center gap-2 ml-4 shrink-0">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => { setCurrentQ(q); setText(q.text); setOrder(q.order); setIsEditing(true); }}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-950"
+                    onClick={() => handleDelete(q.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {questions.length === 0 && (
+              <div className="p-8 text-center text-slate-500">No questions found. Add some questions above.</div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-slate-950">
+          <DialogHeader>
+            <DialogTitle>{currentQ ? "Edit Question" : "Add Question"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Question Text</Label>
+              <textarea 
+                className="w-full flex min-h-[100px] rounded-md border border-slate-200 dark:border-slate-800 bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary" 
+                value={text} 
+                onChange={e=>setText(e.target.value)} 
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Order Number</Label>
+              <input 
+                type="number" 
+                className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary" 
+                value={order} 
+                onChange={e=>setOrder(e.target.value)} 
+                required
+              />
+            </div>
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+              <Button type="submit">Save Question</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 const Feedbacks = () => {
   const { user } = useAuthStore();
   const [feedbacks, setFeedbacks] = useState([]);
   const [programs, setPrograms] = useState([]);
+  const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(
-    user?.role === "PENERIMA_MANFAAT" ? "input" : "history",
+    user?.role === "BENEFICIARY" ? "input" : "history",
   );
 
   // Beneficiary Form State
   const [formData, setFormData] = useState({
     program: "",
-    q1: "4",
-    q2: "4",
-    q3: "4",
-    q4: "4",
-    q5: "4",
-    q6: "4",
-    q7: "4",
-    q8: "4",
-    q9: "4",
-    q10: "4",
   });
+
+  useEffect(() => {
+    if (questions.length > 0 && user?.role === "BENEFICIARY") {
+      const init = { program: formData.program };
+      questions.forEach((q) => {
+        init[q.id.toString()] = "4";
+      });
+      setFormData((prev) => ({ ...prev, ...init }));
+    }
+  }, [questions, user]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -65,12 +178,14 @@ const Feedbacks = () => {
 
   const fetchData = async () => {
     try {
-      const [fbRes, progRes] = await Promise.all([
+      const [fbRes, progRes, qRes] = await Promise.all([
         api.get("/feedbacks/feedbacks/"),
         api.get("/programs/programs/"),
+        api.get("/feedbacks/feedback-questions/"),
       ]);
       setFeedbacks(fbRes.data);
       setPrograms(progRes.data);
+      setQuestions(qRes.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -82,24 +197,16 @@ const Feedbacks = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Combine answers into JSON for backend compatibility
-    const answers = {
-      q1: parseInt(formData.q1),
-      q2: parseInt(formData.q2),
-      q3: parseInt(formData.q3),
-      q4: parseInt(formData.q4),
-      q5: parseInt(formData.q5),
-      q6: parseInt(formData.q6),
-      q7: parseInt(formData.q7),
-      q8: parseInt(formData.q8),
-      q9: parseInt(formData.q9),
-      q10: parseInt(formData.q10),
-    };
+    const answers = {};
+    let totalScore = 0;
+    questions.forEach(q => {
+      const val = parseInt(formData[q.id.toString()] || "4");
+      answers[q.id.toString()] = val;
+      totalScore += val;
+    });
 
     const combinedContent = JSON.stringify(answers);
-    const averageRating = Math.round(
-      Object.values(answers).reduce((a, b) => a + b, 0) / 10,
-    );
+    const averageRating = questions.length > 0 ? Math.round(totalScore / questions.length) : 0;
 
     try {
       await api.post("/feedbacks/feedbacks/", {
@@ -127,9 +234,9 @@ const Feedbacks = () => {
 
   if (loading) return <Loading text="Loading Data..." />;
 
-  const isBeneficiary = user?.role === "PENERIMA_MANFAAT";
+  const isBeneficiary = user?.role === "BENEFICIARY";
   const isManager = user?.role === "MANAGER";
-  const isOperational = user?.role === "STAFF_OPERATIONAL";
+  const isOperational = user?.role === "OPERATIONAL_STAFF";
 
   const exportToCSV = () => {
     const headers = [
@@ -269,7 +376,11 @@ const Feedbacks = () => {
   }
 
   const canUpdate =
-    user?.role === "MANAGER" || user?.role === "STAFF_OPERATIONAL";
+    user?.role === "MANAGER" || user?.role === "OPERATIONAL_STAFF";
+
+  if (user?.role === "ADMIN") {
+    return <AdminQuestionsManager questions={questions} fetchQuestions={fetchData} />;
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -348,48 +459,7 @@ const Feedbacks = () => {
                   </Select>
                 </div>
 
-                {[
-                  {
-                    id: "q1",
-                    text: "1. Were the facilities and service environment provided by PUSPADI Bali comfortable and accessible?",
-                  },
-                  {
-                    id: "q2",
-                    text: "2. Did the team provide adequate support during the service/training process?",
-                  },
-                  {
-                    id: "q3",
-                    text: "3. Did the service run efficiently and according to the promised timeline?",
-                  },
-                  {
-                    id: "q4",
-                    text: "4. How useful were the training and services provided for your daily life?",
-                  },
-                  {
-                    id: "q5",
-                    text: "5. Did the team communicate information clearly and comprehensively?",
-                  },
-                  {
-                    id: "q6",
-                    text: "6. Is the provided mobility aid or equipment in good condition and functioning properly?",
-                  },
-                  {
-                    id: "q7",
-                    text: "7. Were you involved in the decision-making process regarding the service or equipment provided?",
-                  },
-                  {
-                    id: "q8",
-                    text: "8. Did the team respond to your complaints and needs quickly and appropriately?",
-                  },
-                  {
-                    id: "q9",
-                    text: "9. Do you feel more independent after receiving services from PUSPADI Bali?",
-                  },
-                  {
-                    id: "q10",
-                    text: "10. Are you satisfied with the overall service provided by PUSPADI Bali?",
-                  },
-                ].map((q) => (
+                {questions.map((q) => (
                   <div
                     key={q.id}
                     className="space-y-3 p-4 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800"
@@ -410,13 +480,13 @@ const Feedbacks = () => {
                         >
                           <input
                             type="radio"
-                            name={q.id}
+                            name={q.id.toString()}
                             value={opt.val}
-                            checked={formData[q.id] === opt.val}
+                            checked={formData[q.id.toString()] === opt.val}
                             onChange={(e) =>
                               setFormData({
                                 ...formData,
-                                [q.id]: e.target.value,
+                                [q.id.toString()]: e.target.value,
                               })
                             }
                             className="text-primary focus:ring-primary w-4 h-4"
@@ -476,12 +546,12 @@ const Feedbacks = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {user?.role === "PENERIMA_MANFAAT"
+                {user?.role === "BENEFICIARY"
                   ? "My Feedback History"
                   : "Feedback Log"}
               </h1>
               <p className="text-slate-500 text-sm">
-                {user?.role === "PENERIMA_MANFAAT"
+                {user?.role === "BENEFICIARY"
                   ? "Monitor the status and evaluations of your submitted feedback."
                   : "Review and manage beneficiary feedback reports."}
               </p>
@@ -566,10 +636,10 @@ const Feedbacks = () => {
                                   >
                                     <span className="font-semibold text-slate-600 dark:text-slate-400">
                                       {key.toUpperCase()}
-                                      {QUESTION_LABELS[key] && (
+                                      {(QUESTION_LABELS[key] || questions.find(q => q.id.toString() === key)?.text) && (
                                         <span className="font-normal text-slate-400 dark:text-slate-500">
                                           {" "}
-                                          · {QUESTION_LABELS[key]}
+                                          · {QUESTION_LABELS[key] || questions.find(q => q.id.toString() === key)?.text}
                                         </span>
                                       )}
                                     </span>

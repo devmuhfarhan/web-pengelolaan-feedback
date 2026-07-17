@@ -1,17 +1,30 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import useAuthStore from "@/store/authStore";
-import { 
-  Plus, Edit2, Trash2, Search, Loader2, User as UserIcon, Mail, Phone, Lock, 
-  Calendar, ArrowUpDown, UserCheck, RefreshCw, Award, Info 
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+  Loader2,
+  User as UserIcon,
+  Mail,
+  Phone,
+  Lock,
+  Calendar,
+  ArrowUpDown,
+  UserCheck,
+  RefreshCw,
+  Award,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const maskEmail = (email, username) => {
   if (!email) return "";
   if (
-    username === "penerima01" || 
-    username === "penerima02" || 
+    username === "penerima01" ||
+    username === "penerima02" ||
     username === "penerima03" ||
     email.startsWith("penerima01@") ||
     email.startsWith("penerima02@") ||
@@ -33,8 +46,15 @@ const maskEmail = (email, username) => {
 
 const Beneficiaries = () => {
   const { user } = useAuthStore();
-  const canManage = user?.role === "MANAGER" || user?.role === "STAFF_OPERATIONAL" || user?.role === "STAFF_LAPANGAN" || user?.role === "ADMIN";
-  const canEditDelete = user?.role === "MANAGER" || user?.role === "STAFF_OPERATIONAL" || user?.role === "ADMIN";
+  const canManage =
+    user?.role === "MANAGER" ||
+    user?.role === "opeOPERATIONAL_STAFF" ||
+    user?.role === "FIELD_STAFF" ||
+    user?.role === "ADMIN";
+  const canEditDelete =
+    user?.role === "MANAGER" ||
+    user?.role === "opeOPERATIONAL_STAFF" ||
+    user?.role === "ADMIN";
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +73,7 @@ const Beneficiaries = () => {
   // Sorting State
   const [sortField, setSortField] = useState(""); // "program", "gender", or ""
   const [sortDirection, setSortDirection] = useState("asc"); // "asc" or "desc"
-  
+
   // Form State
   const [formData, setFormData] = useState({
     username: "",
@@ -63,12 +83,12 @@ const Beneficiaries = () => {
     birth_date: "",
     gender: "",
     program: "",
-    date_provided: ""
+    date_provided: "",
   });
-  
+
   const [replacementData, setReplacementData] = useState({
     program: "",
-    date_replaced: ""
+    date_replaced: "",
   });
 
   const [formSubmitting, setFormSubmitting] = useState(false);
@@ -110,7 +130,7 @@ const Beneficiaries = () => {
       birth_date: "",
       gender: "",
       program: "",
-      date_provided: ""
+      date_provided: "",
     });
     setFormError("");
     setIsModalOpen(true);
@@ -127,7 +147,7 @@ const Beneficiaries = () => {
       birth_date: beneficiary.birth_date || "",
       gender: beneficiary.gender || "",
       program: beneficiary.program ? beneficiary.program.toString() : "",
-      date_provided: beneficiary.date_provided || ""
+      date_provided: beneficiary.date_provided || "",
     });
     setFormError("");
     setIsModalOpen(true);
@@ -149,25 +169,34 @@ const Beneficiaries = () => {
     setFormError("");
 
     // Prepare submit data, convert empty fields to null, parse program ID
-    const submitData = { 
+    const submitData = {
       ...formData,
-      program: formData.program && formData.program !== "" ? parseInt(formData.program) : null,
+      program:
+        formData.program && formData.program !== ""
+          ? parseInt(formData.program)
+          : null,
       birth_date: formData.birth_date || null,
       date_provided: formData.date_provided || null,
-      gender: formData.gender || null
+      gender: formData.gender || null,
     };
 
     try {
       if (modalType === "ADD") {
         await api.post("/users/beneficiaries/", submitData);
       } else {
-        await api.put(`/users/beneficiaries/${selectedBeneficiary.id}/`, submitData);
+        await api.put(
+          `/users/beneficiaries/${selectedBeneficiary.id}/`,
+          submitData,
+        );
       }
       setIsModalOpen(false);
       fetchBeneficiaries();
     } catch (error) {
       console.error("Error saving beneficiary:", error);
-      const serverMsg = error.response?.data?.username?.[0] || error.response?.data?.email?.[0] || "Failed to save data. Please try again.";
+      const serverMsg =
+        error.response?.data?.username?.[0] ||
+        error.response?.data?.email?.[0] ||
+        "Failed to save data. Please try again.";
       setFormError(serverMsg);
     } finally {
       setFormSubmitting(false);
@@ -179,10 +208,15 @@ const Beneficiaries = () => {
     setFormSubmitting(true);
     setFormError("");
     try {
-      await api.post(`/users/beneficiaries/${selectedBeneficiary.id}/add_replacement/`, {
-        program: replacementData.program ? parseInt(replacementData.program) : null,
-        date_replaced: replacementData.date_replaced
-      });
+      await api.post(
+        `/users/beneficiaries/${selectedBeneficiary.id}/add_replacement/`,
+        {
+          program: replacementData.program
+            ? parseInt(replacementData.program)
+            : null,
+          date_replaced: replacementData.date_replaced,
+        },
+      );
       setIsReplacementModalOpen(false);
       fetchBeneficiaries();
     } catch (error) {
@@ -194,7 +228,11 @@ const Beneficiaries = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this beneficiary account?")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this beneficiary account?",
+      )
+    ) {
       try {
         await api.delete(`/users/beneficiaries/${id}/`);
         fetchBeneficiaries();
@@ -216,8 +254,9 @@ const Beneficiaries = () => {
 
   // Filter Logic
   const filteredBeneficiaries = beneficiaries.filter((item) => {
-    const fullName = `${item.first_name || ""} ${item.last_name || ""}`.toLowerCase();
-    const matchesSearch = 
+    const fullName =
+      `${item.first_name || ""} ${item.last_name || ""}`.toLowerCase();
+    const matchesSearch =
       fullName.includes(searchTerm.toLowerCase()) ||
       item.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -228,7 +267,7 @@ const Beneficiaries = () => {
   // Sorting Logic
   const sortedBeneficiaries = [...filteredBeneficiaries].sort((a, b) => {
     if (!sortField) return 0;
-    
+
     if (sortField === "program") {
       const valA = a.program_detail?.title || "";
       const valB = b.program_detail?.title || "";
@@ -263,11 +302,19 @@ const Beneficiaries = () => {
       {/* Top Header Card */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Beneficiary Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage user accounts and profile data for Puspadi Bali beneficiaries.</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+            Beneficiary Management
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Manage user accounts and profile data for Puspadi Bali
+            beneficiaries.
+          </p>
         </div>
         {canManage && (
-          <Button onClick={handleOpenAddModal} className="flex items-center gap-2 self-start md:self-auto">
+          <Button
+            onClick={handleOpenAddModal}
+            className="flex items-center gap-2 self-start md:self-auto"
+          >
             <Plus className="w-4 h-4" />
             Add Beneficiary
           </Button>
@@ -286,10 +333,12 @@ const Beneficiaries = () => {
             className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 focus:bg-white dark:bg-slate-950 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
           />
         </div>
-        
+
         {/* Sort Controls */}
         <div className="flex items-center gap-3">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Sort By:</label>
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+            Sort By:
+          </label>
           <select
             value={sortField}
             onChange={(e) => {
@@ -305,10 +354,12 @@ const Beneficiaries = () => {
             <option value="program">Program</option>
             <option value="age">Age</option>
           </select>
-          
+
           {sortField && (
             <button
-              onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
+              onClick={() =>
+                setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+              }
               className="p-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 text-slate-600 dark:text-slate-300"
               title={sortDirection === "asc" ? "Ascending" : "Descending"}
             >
@@ -323,48 +374,69 @@ const Beneficiaries = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-sm text-slate-500">Loading beneficiary data...</p>
+            <p className="text-sm text-slate-500">
+              Loading beneficiary data...
+            </p>
           </div>
         ) : sortedBeneficiaries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">
             <UserIcon className="w-10 h-10 text-slate-300 dark:text-slate-700" />
-            <p className="text-base font-semibold text-slate-600 dark:text-slate-400">No beneficiary data</p>
-            <p className="text-sm text-slate-400 text-center max-w-md">Try changing your search terms or adding a new beneficiary account.</p>
+            <p className="text-base font-semibold text-slate-600 dark:text-slate-400">
+              No beneficiary data
+            </p>
+            <p className="text-sm text-slate-400 text-center max-w-md">
+              Try changing your search terms or adding a new beneficiary
+              account.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Full Name</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Gender</th>
-                  <th 
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Full Name
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Gender
+                  </th>
+                  <th
                     className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
                     onClick={() => handleSort("age")}
                   >
                     <div className="flex items-center gap-1">
-                      Age {sortField === "age" && (sortDirection === "asc" ? "▲" : "▼")}
+                      Age{" "}
+                      {sortField === "age" &&
+                        (sortDirection === "asc" ? "▲" : "▼")}
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
                     onClick={() => handleSort("program")}
                   >
                     <div className="flex items-center gap-1">
-                      Program {sortField === "program" && (sortDirection === "asc" ? "▲" : "▼")}
+                      Program{" "}
+                      {sortField === "program" &&
+                        (sortDirection === "asc" ? "▲" : "▼")}
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Date Provided</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">All Programs</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Date Provided
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    All Programs
+                  </th>
                   {canEditDelete && (
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">
+                      Actions
+                    </th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {sortedBeneficiaries.map((item) => (
-                  <tr 
-                    key={item.id} 
+                  <tr
+                    key={item.id}
                     onClick={() => handleRowClick(item)}
                     className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
                   >
@@ -375,15 +447,22 @@ const Beneficiaries = () => {
                         </div>
                         <div>
                           <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">
-                            {`${item.first_name || ""} ${item.last_name || ""}`.trim() || item.username}
+                            {`${item.first_name || ""} ${item.last_name || ""}`.trim() ||
+                              item.username}
                           </span>
-                          <span className="block text-[10px] text-slate-400 font-medium">{maskEmail(item.email, item.username)}</span>
+                          <span className="block text-[10px] text-slate-400 font-medium">
+                            {maskEmail(item.email, item.username)}
+                          </span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-slate-600 dark:text-slate-400">
-                        {item.gender === "L" ? "Male" : item.gender === "P" ? "Female" : "-"}
+                        {item.gender === "L"
+                          ? "Male"
+                          : item.gender === "P"
+                            ? "Female"
+                            : "-"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -424,7 +503,10 @@ const Beneficiaries = () => {
                       </div>
                     </td>
                     {canEditDelete && (
-                      <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <td
+                        className="px-6 py-4 text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleOpenEditModal(item)}
@@ -459,7 +541,9 @@ const Beneficiaries = () => {
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
               <div className="flex items-center gap-2">
                 <UserIcon className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Beneficiary Details</h3>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                  Beneficiary Details
+                </h3>
               </div>
               <button
                 onClick={() => setIsDetailModalOpen(false)}
@@ -473,39 +557,64 @@ const Beneficiaries = () => {
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4 border-b border-slate-100 dark:border-slate-850 pb-5">
                 <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold">
-                  {detailBeneficiary.first_name?.[0]?.toUpperCase() || detailBeneficiary.username?.[0]?.toUpperCase() || "B"}
+                  {detailBeneficiary.first_name?.[0]?.toUpperCase() ||
+                    detailBeneficiary.username?.[0]?.toUpperCase() ||
+                    "B"}
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                    {`${detailBeneficiary.first_name || ""} ${detailBeneficiary.last_name || ""}`.trim() || detailBeneficiary.username}
+                    {`${detailBeneficiary.first_name || ""} ${detailBeneficiary.last_name || ""}`.trim() ||
+                      detailBeneficiary.username}
                   </h4>
-                  <p className="text-xs text-slate-500">Username: {detailBeneficiary.username}</p>
+                  <p className="text-xs text-slate-500">
+                    Username: {detailBeneficiary.username}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> Email</span>
-                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{maskEmail(detailBeneficiary.email, detailBeneficiary.username)}</p>
-                </div>
-                
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> Phone Number</span>
-                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{detailBeneficiary.phone_number || "-"}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Date of Birth</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5" /> Email
+                  </span>
                   <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                    {detailBeneficiary.birth_date || "-"} 
-                    {detailBeneficiary.age !== null && ` (${detailBeneficiary.age} yrs)`}
+                    {maskEmail(
+                      detailBeneficiary.email,
+                      detailBeneficiary.username,
+                    )}
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><UserIcon className="w-3.5 h-3.5" /> Gender</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5" /> Phone Number
+                  </span>
                   <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                    {detailBeneficiary.gender === "L" ? "Male" : detailBeneficiary.gender === "P" ? "Female" : "-"}
+                    {detailBeneficiary.phone_number || "-"}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" /> Date of Birth
+                  </span>
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                    {detailBeneficiary.birth_date || "-"}
+                    {detailBeneficiary.age !== null &&
+                      ` (${detailBeneficiary.age} yrs)`}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <UserIcon className="w-3.5 h-3.5" /> Gender
+                  </span>
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                    {detailBeneficiary.gender === "L"
+                      ? "Male"
+                      : detailBeneficiary.gender === "P"
+                        ? "Female"
+                        : "-"}
                   </p>
                 </div>
 
@@ -537,22 +646,26 @@ const Beneficiaries = () => {
                     )}
                   </div>
                   {canManage && (
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedBeneficiary(detailBeneficiary);
                         setIsReplacementModalOpen(true);
-                      }} 
+                      }}
                       className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 border border-primary/30 hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all"
                     >
                       + Add Program
                     </button>
                   )}
                 </div>
-                
+
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><UserCheck className="w-3.5 h-3.5" /> Last Modified By</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5" /> Last Modified By
+                  </span>
                   <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                    {detailBeneficiary.updated_by ? `User ID ${detailBeneficiary.updated_by}` : "-"}
+                    {detailBeneficiary.updated_by
+                      ? `User ID ${detailBeneficiary.updated_by}`
+                      : "-"}
                   </p>
                 </div>
               </div>
@@ -560,9 +673,7 @@ const Beneficiaries = () => {
 
             {/* Modal Footer */}
             <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
-              <Button onClick={() => setIsDetailModalOpen(false)}>
-                Close
-              </Button>
+              <Button onClick={() => setIsDetailModalOpen(false)}>Close</Button>
             </div>
           </div>
         </div>
@@ -593,26 +704,34 @@ const Beneficiaries = () => {
                     {formError}
                   </div>
                 )}
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">First Name</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      First Name
+                    </label>
                     <input
                       type="text"
                       required
                       placeholder="Siti"
                       value={formData.first_name}
-                      onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, first_name: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Last Name</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      Last Name
+                    </label>
                     <input
                       type="text"
                       placeholder="Aminah"
                       value={formData.last_name}
-                      onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, last_name: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                     />
                   </div>
@@ -621,13 +740,17 @@ const Beneficiaries = () => {
                 {modalType === "EDIT" && (
                   <>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Username</label>
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                        Username
+                      </label>
                       <input
                         type="text"
                         required
                         placeholder="beneficiary01"
                         value={formData.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, username: e.target.value })
+                        }
                         className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                       />
                     </div>
@@ -635,34 +758,46 @@ const Beneficiaries = () => {
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Phone Number</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                    Phone Number
+                  </label>
                   <input
                     type="text"
                     placeholder="0812xxxxxxxx"
                     value={formData.phone_number}
-                    onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone_number: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Date of Birth</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      Date of Birth
+                    </label>
                     <input
                       type="date"
                       required
                       value={formData.birth_date}
-                      onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, birth_date: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Gender</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      Gender
+                    </label>
                     <select
                       required
                       value={formData.gender}
-                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gender: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                     >
                       <option value="">Select Gender</option>
@@ -673,11 +808,15 @@ const Beneficiaries = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Program</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                    Program
+                  </label>
                   <select
                     required
                     value={formData.program}
-                    onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, program: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                   >
                     <option value="">Select Program</option>
@@ -691,12 +830,19 @@ const Beneficiaries = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Date Provided</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      Date Provided
+                    </label>
                     <input
                       type="date"
                       required
                       value={formData.date_provided}
-                      onChange={(e) => setFormData({ ...formData, date_provided: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          date_provided: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                     />
                   </div>
@@ -718,7 +864,9 @@ const Beneficiaries = () => {
                   disabled={formSubmitting}
                   className="flex items-center gap-2"
                 >
-                  {formSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {formSubmitting && (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  )}
                   {modalType === "ADD" ? "Save" : "Update"}
                 </Button>
               </div>
@@ -744,35 +892,56 @@ const Beneficiaries = () => {
             <form onSubmit={handleReplacementSubmit}>
               <div className="p-6 space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Program</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                    Program
+                  </label>
                   <select
                     required
                     value={replacementData.program}
-                    onChange={(e) => setReplacementData({ ...replacementData, program: e.target.value })}
+                    onChange={(e) =>
+                      setReplacementData({
+                        ...replacementData,
+                        program: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                   >
                     <option value="">Select Program</option>
                     {programs.map((prog) => (
-                      <option key={prog.id} value={prog.id.toString()}>{prog.title}</option>
+                      <option key={prog.id} value={prog.id.toString()}>
+                        {prog.title}
+                      </option>
                     ))}
                   </select>
                 </div>
-                
-                                <div className="space-y-1.5">
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Tanggal Mulai Program</label>
                   <input
                     type="date"
                     required
                     value={replacementData.date_replaced}
-                    onChange={(e) => setReplacementData({ ...replacementData, date_replaced: e.target.value })}
+                    onChange={(e) =>
+                      setReplacementData({
+                        ...replacementData,
+                        date_replaced: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
                   />
                 </div>
               </div>
 
               <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setIsReplacementModalOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={formSubmitting}>Save</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsReplacementModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={formSubmitting}>
+                  Save
+                </Button>
               </div>
             </form>
           </div>

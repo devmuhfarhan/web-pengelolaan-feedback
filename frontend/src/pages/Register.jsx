@@ -14,7 +14,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -134,16 +140,21 @@ const Register = () => {
                   <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 z-10" />
                   <Select
                     value={formData.role}
-                    onValueChange={(val) => setFormData({ ...formData, role: val })}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, role: val })
+                    }
                   >
                     <SelectTrigger className="h-9 pl-9 bg-slate-50/50 border-slate-200 text-sm">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="MANAGER">Manager</SelectItem>
-                      <SelectItem value="STAFF_OPERATIONAL">Operational Staff</SelectItem>
-                      <SelectItem value="STAFF_LAPANGAN">Field Staff</SelectItem>
-                      <SelectItem value="PENERIMA_MANFAAT">Beneficiary</SelectItem>
+                      <SelectItem value="OPERATIONAL_STAFF">
+                        Operational Staff
+                      </SelectItem>
+                      <SelectItem value="FIELD_STAFF">Field Staff</SelectItem>
+                      <SelectItem value="BENEFICIARY">Beneficiary</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -253,8 +264,8 @@ const Register = () => {
 
             <div className="text-[9px] text-slate-400 flex flex-col items-center gap-1">
               <p>
-                &copy; {new Date().getFullYear()} Puspadi Bali. All
-                Rights Reserved.
+                &copy; {new Date().getFullYear()} Puspadi Bali. All Rights
+                Reserved.
               </p>
               <div className="flex gap-4">
                 <a href="#" className="hover:text-slate-600">

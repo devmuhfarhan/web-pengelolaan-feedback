@@ -112,7 +112,7 @@ Proyek ini telah di-seed dengan akun siap pakai untuk mempermudah simulasi UAT. 
    - **Username**: `staff_lapangan01`
    - **Password**: `Password123!`
 
-3. **Staff Operational** (Pemantauan Feedback, Program, & Dokumen):
+3. **Operational Staff** (Pemantauan Feedback, Program, & Dokumen):
    - **Username**: `staff_ops01`
    - **Password**: `Password123!`
 

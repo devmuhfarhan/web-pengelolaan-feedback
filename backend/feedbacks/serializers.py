@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Feedback, FeedbackCategory
+from .models import Feedback, FeedbackCategory, FeedbackQuestion
 from users.serializers import UserSerializer
 from programs.serializers import ProgramSerializer
 
@@ -8,6 +8,12 @@ class FeedbackCategorySerializer(serializers.ModelSerializer):
         model = FeedbackCategory
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
+
+class FeedbackQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeedbackQuestion
+        fields = '__all__'
+        read_only_fields = ('created_at',)
 
 
 class FeedbackSerializer(serializers.ModelSerializer):

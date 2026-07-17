@@ -99,7 +99,7 @@ class BeneficiaryDataSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password', 'Password123!')
-        validated_data['role'] = 'PENERIMA_MANFAAT'
+        validated_data['role'] = 'BENEFICIARY'
         if not validated_data.get('username'):
             validated_data['username'] = f"penerima_{uuid.uuid4().hex[:8]}"
         user = User.objects.create_user(**validated_data)

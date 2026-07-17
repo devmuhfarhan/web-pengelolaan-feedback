@@ -13,7 +13,20 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
-from decouple import config, Csv
+try:
+    from decouple import config, Csv
+except ImportError:
+    # Fallback jika python-decouple belum terinstall
+    def config(key, default=None, cast=None):
+        val = os.environ.get(key, default)
+        if cast and val is not None:
+            return cast(val)
+        return val
+    class Csv:
+        def __call__(self, val):
+            return [v.strip() for v in val.split(',')]
+    Csv = Csv()
+
 try:
     import pymysql
     pymysql.install_as_MySQLdb()
@@ -32,7 +45,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-8hj2ieg6z!9x!fiy919_p085b$)(23!)ki3x1=5r*y^&pufhfj')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
@@ -96,11 +109,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'db_pengelolaan_feedback'),
-        'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'root'),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
+        'NAME': config('DB_NAME', default='puspadi_bali'),
+        'USER': config('DB_USER', default='root'),
+        'PASSWORD': config('DB_PASSWORD', default='root'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='3306'),
     }
 }
 
@@ -155,12 +168,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:5173,http://127.0.0.1:5173',
-    cast=Csv()
-)
+# CORS: Allow all origins (sesuai kebutuhan cPanel deployment)
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'users.authentication.CustomJWTAuthentication',

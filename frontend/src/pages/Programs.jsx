@@ -1,26 +1,58 @@
 import { useState, useEffect, useRef } from "react";
 import useAuthStore from "@/store/authStore";
 import api from "@/lib/axios";
-import { 
-  Plus, Edit2, Trash2, Calendar, Users, Eye, UploadCloud, FileText, 
-  CheckCircle2, Loader2, Info, ExternalLink, Link as LinkIcon,
-  Activity, FolderOpen
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Calendar,
+  Users,
+  Eye,
+  UploadCloud,
+  FileText,
+  CheckCircle2,
+  Loader2,
+  Info,
+  ExternalLink,
+  Link as LinkIcon,
+  Activity,
+  FolderOpen,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loading } from "@/components/ui/Loading";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const BACKEND_URL = "http://127.0.0.1:8000";
 
 const maskEmail = (email, username) => {
   if (!email) return "";
   if (
-    username === "penerima01" || 
-    username === "penerima02" || 
+    username === "penerima01" ||
+    username === "penerima02" ||
     username === "penerima03" ||
     email.startsWith("penerima01@") ||
     email.startsWith("penerima02@") ||
@@ -42,8 +74,8 @@ const maskEmail = (email, username) => {
 
 const Programs = () => {
   const { user } = useAuthStore();
-  const isStaffLapangan = user?.role === "STAFF_LAPANGAN";
-  const canManage = user?.role === "STAFF_OPERATIONAL";
+  const isStaffLapangan = user?.role === "FIELD_STAFF";
+  const canManage = user?.role === "OPERATIONAL_STAFF";
 
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +116,7 @@ const Programs = () => {
 
       // Keep selectedProgram state in sync
       if (selectedProgram) {
-        const updated = response.data.find(p => p.id === selectedProgram.id);
+        const updated = response.data.find((p) => p.id === selectedProgram.id);
         if (updated) {
           setSelectedProgram(updated);
         }
@@ -141,7 +173,12 @@ const Programs = () => {
 
   const handleDelete = async (e, id) => {
     e.stopPropagation(); // Avoid opening details modal
-    if (!window.confirm("Are you sure you want to delete this program and all its data?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this program and all its data?",
+      )
+    )
+      return;
     try {
       await api.delete(`/programs/programs/${id}/`);
       fetchPrograms();
@@ -171,8 +208,14 @@ const Programs = () => {
         return;
       }
       const allowedTypes = ["image/jpeg", "image/jpg"];
-      if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith(".jpg") && !file.name.toLowerCase().endsWith(".jpeg")) {
-        setUploadError("Unsupported file format. Please upload photos in JPG or JPEG format only.");
+      if (
+        !allowedTypes.includes(file.type) &&
+        !file.name.toLowerCase().endsWith(".jpg") &&
+        !file.name.toLowerCase().endsWith(".jpeg")
+      ) {
+        setUploadError(
+          "Unsupported file format. Please upload photos in JPG or JPEG format only.",
+        );
         return;
       }
       setUploadFile(file);
@@ -189,7 +232,9 @@ const Programs = () => {
   const handleProgramUploadSubmit = async (e) => {
     e.preventDefault();
     if (!uploadFile && !uploadDriveLink.trim()) {
-      setUploadError("Please select a JPG photo file or enter a Google Drive link.");
+      setUploadError(
+        "Please select a JPG photo file or enter a Google Drive link.",
+      );
       return;
     }
 
@@ -221,7 +266,7 @@ const Programs = () => {
       setUploadFilePreview("");
       setIsUploadPanelOpen(false);
       if (programFileInputRef.current) programFileInputRef.current.value = "";
-      
+
       // Refresh database records
       fetchPrograms();
     } catch (error) {
@@ -250,16 +295,25 @@ const Programs = () => {
             Program & Activity Evidence
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Monitor program details and upload specific evidence of field activities.
+            Monitor program details and upload specific evidence of field
+            activities.
           </p>
         </div>
         {canManage && (
-          <Dialog open={isModalOpen} onOpenChange={(open) => {
-            if (!open) resetForm();
-            else setModalOpen(true);
-          }}>
+          <Dialog
+            open={isModalOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                resetForm();
+                setModalOpen(false);
+              } else setModalOpen(true);
+            }}
+          >
             <DialogTrigger asChild>
-              <Button className="px-5 font-bold shadow-md rounded-xl" onClick={() => resetForm()}>
+              <Button
+                className="px-5 font-bold shadow-md rounded-xl"
+                onClick={() => resetForm()}
+              >
                 <Plus className="mr-1.5 h-5 w-5" /> Create New Program
               </Button>
             </DialogTrigger>
@@ -269,12 +323,17 @@ const Programs = () => {
                   {editingId ? "Edit Program" : "Create New Program"}
                 </h3>
                 <p className="text-sm text-slate-500">
-                  {editingId ? "Update program details." : "Enter new program details for implementation."}
+                  {editingId
+                    ? "Update program details."
+                    : "Enter new program details for implementation."}
                 </p>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-5 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="font-semibold text-slate-700 dark:text-slate-300">
+                  <Label
+                    htmlFor="title"
+                    className="font-semibold text-slate-700 dark:text-slate-300"
+                  >
                     Program Title
                   </Label>
                   <Input
@@ -288,7 +347,10 @@ const Programs = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-semibold text-slate-700 dark:text-slate-300">
+                  <Label
+                    htmlFor="description"
+                    className="font-semibold text-slate-700 dark:text-slate-300"
+                  >
                     Program Description
                   </Label>
                   <textarea
@@ -303,7 +365,10 @@ const Programs = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="start_date" className="font-semibold text-slate-700 dark:text-slate-300">
+                    <Label
+                      htmlFor="start_date"
+                      className="font-semibold text-slate-700 dark:text-slate-300"
+                    >
                       Implementation Date
                     </Label>
                     <Input
@@ -318,7 +383,10 @@ const Programs = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="target" className="font-semibold text-slate-700 dark:text-slate-300">
+                    <Label
+                      htmlFor="target"
+                      className="font-semibold text-slate-700 dark:text-slate-300"
+                    >
                       Target Beneficiaries
                     </Label>
                     <Input
@@ -337,7 +405,10 @@ const Programs = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="font-semibold text-slate-700 dark:text-slate-300">
+                  <Label
+                    htmlFor="status"
+                    className="font-semibold text-slate-700 dark:text-slate-300"
+                  >
                     Execution Status
                   </Label>
                   <Select
@@ -357,10 +428,18 @@ const Programs = () => {
                   </Select>
                 </div>
                 <DialogFooter className="pt-4">
-                  <Button type="button" variant="ghost" onClick={() => resetForm()}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => resetForm()}
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isSubmitting} className="px-8 font-semibold">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-8 font-semibold"
+                  >
                     {isSubmitting ? "Saving..." : "Save Program"}
                   </Button>
                 </DialogFooter>
@@ -420,7 +499,10 @@ const Programs = () => {
                   <span>
                     Implementation Date:{" "}
                     <strong className="text-slate-800 dark:text-slate-200">
-                      {new Date(program.start_date).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}
+                      {new Date(program.start_date).toLocaleDateString(
+                        "en-US",
+                        { day: "numeric", month: "long", year: "numeric" },
+                      )}
                     </strong>
                   </span>
                 </div>
@@ -458,8 +540,12 @@ const Programs = () => {
             <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-300 dark:text-slate-600">
               <FolderOpen className="w-8 h-8" />
             </div>
-            <p className="text-lg font-bold text-slate-700 dark:text-slate-350">No programs available</p>
-            <p className="text-sm text-slate-400">There are no programs registered yet.</p>
+            <p className="text-lg font-bold text-slate-700 dark:text-slate-350">
+              No programs available
+            </p>
+            <p className="text-sm text-slate-400">
+              There are no programs registered yet.
+            </p>
           </div>
         )}
       </div>
@@ -468,7 +554,6 @@ const Programs = () => {
       {isDetailModalOpen && selectedProgram && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
               <div className="flex items-center gap-2">
@@ -505,21 +590,31 @@ const Programs = () => {
               {/* Assigned Beneficiaries List */}
               <div className="space-y-3">
                 <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
-                  <Users className="w-4 h-4 text-primary" /> Beneficiaries ({selectedProgram.beneficiaries?.length || 0})
+                  <Users className="w-4 h-4 text-primary" /> Beneficiaries (
+                  {selectedProgram.beneficiaries?.length || 0})
                 </h4>
-                {selectedProgram.beneficiaries && selectedProgram.beneficiaries.length > 0 ? (
+                {selectedProgram.beneficiaries &&
+                selectedProgram.beneficiaries.length > 0 ? (
                   <div className="max-h-[150px] overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-xl divide-y divide-slate-100 dark:divide-slate-850 bg-slate-50/50 dark:bg-slate-950">
                     {selectedProgram.beneficiaries.map((b) => (
-                      <div key={b.id} className="p-3 flex items-center justify-between">
+                      <div
+                        key={b.id}
+                        className="p-3 flex items-center justify-between"
+                      >
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
-                            {b.first_name?.[0]?.toUpperCase() || b.username?.[0]?.toUpperCase() || "B"}
+                            {b.first_name?.[0]?.toUpperCase() ||
+                              b.username?.[0]?.toUpperCase() ||
+                              "B"}
                           </div>
                           <div>
                             <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                              {`${b.first_name || ""} ${b.last_name || ""}`.trim() || b.username}
+                              {`${b.first_name || ""} ${b.last_name || ""}`.trim() ||
+                                b.username}
                             </span>
-                            <span className="block text-[9px] text-slate-400">{maskEmail(b.email, b.username)}</span>
+                            <span className="block text-[9px] text-slate-400">
+                              {maskEmail(b.email, b.username)}
+                            </span>
                           </div>
                         </div>
                         {b.age !== null && (
@@ -553,13 +648,19 @@ const Programs = () => {
                     className="w-full px-5 py-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"
                   >
                     <span className="flex items-center gap-1.5 text-primary">
-                      <UploadCloud className="w-4 h-4" /> Upload Activity Evidence
+                      <UploadCloud className="w-4 h-4" /> Upload Activity
+                      Evidence
                     </span>
-                    <span>{isUploadPanelOpen ? "Close Form" : "Open Form"}</span>
+                    <span>
+                      {isUploadPanelOpen ? "Close Form" : "Open Form"}
+                    </span>
                   </button>
 
                   {isUploadPanelOpen && (
-                    <form onSubmit={handleProgramUploadSubmit} className="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 space-y-4">
+                    <form
+                      onSubmit={handleProgramUploadSubmit}
+                      className="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 space-y-4"
+                    >
                       {uploadError && (
                         <div className="p-3 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg">
                           {uploadError}
@@ -574,7 +675,9 @@ const Programs = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Upload Photo (JPG/JPEG only)</label>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                            Upload Photo (JPG/JPEG only)
+                          </label>
                           <div
                             onClick={() => programFileInputRef.current?.click()}
                             className="w-full py-6 px-3 border border-dashed border-slate-250 hover:border-primary rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50/50 transition-all text-center"
@@ -587,11 +690,17 @@ const Programs = () => {
                               className="hidden"
                             />
                             {uploadFilePreview ? (
-                              <img src={uploadFilePreview} alt="preview" className="h-10 w-auto object-cover rounded-md" />
+                              <img
+                                src={uploadFilePreview}
+                                alt="preview"
+                                className="h-10 w-auto object-cover rounded-md"
+                              />
                             ) : (
                               <>
                                 <UploadCloud className="w-5 h-5 text-primary" />
-                                <span className="text-[10px] text-slate-450 font-bold">Select JPG file</span>
+                                <span className="text-[10px] text-slate-450 font-bold">
+                                  Select JPG file
+                                </span>
                               </>
                             )}
                           </div>
@@ -599,7 +708,8 @@ const Programs = () => {
 
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                            <LinkIcon className="w-3 h-3 text-slate-400" /> Google Drive Link (Optional)
+                            <LinkIcon className="w-3 h-3 text-slate-400" />{" "}
+                            Google Drive Link (Optional)
                           </label>
                           <Input
                             placeholder="https://drive.google.com/..."
@@ -607,12 +717,16 @@ const Programs = () => {
                             onChange={(e) => setUploadDriveLink(e.target.value)}
                             className="h-9 text-xs rounded-lg"
                           />
-                          <p className="text-[9px] text-slate-400">Use this for cloud-stored files.</p>
+                          <p className="text-[9px] text-slate-400">
+                            Use this for cloud-stored files.
+                          </p>
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Evidence Description</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                          Evidence Description
+                        </label>
                         <textarea
                           placeholder="Describe the activity..."
                           value={uploadDescription}
@@ -623,11 +737,24 @@ const Programs = () => {
                       </div>
 
                       <div className="flex justify-end gap-2">
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setIsUploadPanelOpen(false)}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsUploadPanelOpen(false)}
+                        >
                           Cancel
                         </Button>
-                        <Button type="submit" size="sm" disabled={uploadSubmitting} className="font-bold flex items-center gap-1.5 px-4">
-                          {uploadSubmitting && <Loader2 className="w-3 h-3 animate-spin" />} Upload Evidence
+                        <Button
+                          type="submit"
+                          size="sm"
+                          disabled={uploadSubmitting}
+                          className="font-bold flex items-center gap-1.5 px-4"
+                        >
+                          {uploadSubmitting && (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          )}{" "}
+                          Upload Evidence
                         </Button>
                       </div>
                     </form>
@@ -640,12 +767,17 @@ const Programs = () => {
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                   Program Evidence Gallery
                 </label>
-                {selectedProgram.documentations && selectedProgram.documentations.length > 0 ? (
+                {selectedProgram.documentations &&
+                selectedProgram.documentations.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {selectedProgram.documentations.map((doc) => {
-                      const isImg = doc.file && !doc.file.toLowerCase().endsWith(".pdf");
+                      const isImg =
+                        doc.file && !doc.file.toLowerCase().endsWith(".pdf");
                       return (
-                        <div key={doc.id} className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col justify-between group relative">
+                        <div
+                          key={doc.id}
+                          className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col justify-between group relative"
+                        >
                           <div className="aspect-video flex items-center justify-center bg-slate-100 dark:bg-slate-900 border-b border-slate-200/50 overflow-hidden">
                             {doc.file ? (
                               isImg ? (
@@ -657,27 +789,38 @@ const Programs = () => {
                               ) : (
                                 <div className="flex flex-col items-center gap-1 text-rose-500">
                                   <FileText className="w-8 h-8" />
-                                  <span className="text-[9px] font-bold">PDF Report</span>
+                                  <span className="text-[9px] font-bold">
+                                    PDF Report
+                                  </span>
                                 </div>
                               )
                             ) : doc.drive_link ? (
                               <div className="flex flex-col items-center gap-1.5 text-blue-500">
                                 <LinkIcon className="w-8 h-8 text-blue-500 animate-pulse" />
-                                <span className="text-[9px] font-bold text-center px-2 truncate max-w-full">Google Drive Link</span>
+                                <span className="text-[9px] font-bold text-center px-2 truncate max-w-full">
+                                  Google Drive Link
+                                </span>
                               </div>
                             ) : (
                               <div className="flex flex-col items-center gap-1 text-slate-400">
                                 <Info className="w-8 h-8" />
-                                <span className="text-[9px] font-bold">No file</span>
+                                <span className="text-[9px] font-bold">
+                                  No file
+                                </span>
                               </div>
                             )}
                           </div>
                           <div className="p-2.5 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed truncate">
-                            {doc.description || (doc.drive_link ? "Google Drive Link" : "(No description)")}
+                            {doc.description ||
+                              (doc.drive_link
+                                ? "Google Drive Link"
+                                : "(No description)")}
                           </div>
                           {/* Floating open button */}
                           <a
-                            href={doc.file ? getMediaUrl(doc.file) : doc.drive_link}
+                            href={
+                              doc.file ? getMediaUrl(doc.file) : doc.drive_link
+                            }
                             target="_blank"
                             rel="noreferrer"
                             className="absolute top-2 right-2 p-1.5 bg-white/95 dark:bg-slate-900/95 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-white text-slate-600 dark:text-slate-300 shadow-sm"
@@ -701,11 +844,13 @@ const Programs = () => {
 
             {/* Modal Footer */}
             <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
-              <Button onClick={() => setIsDetailModalOpen(false)} className="h-9 px-6 text-xs font-semibold">
+              <Button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="h-9 px-6 text-xs font-semibold"
+              >
                 Close
               </Button>
             </div>
-
           </div>
         </div>
       )}
