@@ -48,12 +48,12 @@ const Beneficiaries = () => {
   const { user } = useAuthStore();
   const canManage =
     user?.role === "MANAGER" ||
-    user?.role === "opeOPERATIONAL_STAFF" ||
+    user?.role === "OPERATIONAL_STAFF" ||
     user?.role === "FIELD_STAFF" ||
     user?.role === "ADMIN";
   const canEditDelete =
     user?.role === "MANAGER" ||
-    user?.role === "opeOPERATIONAL_STAFF" ||
+    user?.role === "OPERATIONAL_STAFF" ||
     user?.role === "ADMIN";
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [programs, setPrograms] = useState([]);
@@ -489,17 +489,22 @@ const Beneficiaries = () => {
                           </span>
                         )}
                         {/* Program dari replacements */}
-                        {item.replacements && item.replacements
-                          .filter(rep => rep.program_detail)
-                          .map(rep => (
-                            <span key={rep.id} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                              {rep.program_detail.title}
-                            </span>
-                          ))
-                        }
-                        {!item.program_detail && (!item.replacements || item.replacements.length === 0) && (
-                          <span className="text-sm text-slate-400">-</span>
-                        )}
+                        {item.replacements &&
+                          item.replacements
+                            .filter((rep) => rep.program_detail)
+                            .map((rep) => (
+                              <span
+                                key={rep.id}
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
+                              >
+                                {rep.program_detail.title}
+                              </span>
+                            ))}
+                        {!item.program_detail &&
+                          (!item.replacements ||
+                            item.replacements.length === 0) && (
+                            <span className="text-sm text-slate-400">-</span>
+                          )}
                       </div>
                     </td>
                     {canEditDelete && (
@@ -619,7 +624,9 @@ const Beneficiaries = () => {
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Program History</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5" /> Program History
+                  </span>
                   <div className="space-y-2">
                     {/* Program Utama */}
                     {detailBeneficiary.program_detail && (
@@ -627,23 +634,32 @@ const Beneficiaries = () => {
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                           {detailBeneficiary.program_detail.title}
                         </span>
-                        <span className="text-[10px] text-slate-400">({detailBeneficiary.date_provided || "date n/a"})</span>
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-wide">Current</span>
+                        <span className="text-[10px] text-slate-400">
+                          ({detailBeneficiary.date_provided || "date n/a"})
+                        </span>
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-wide">
+                          Current
+                        </span>
                       </div>
                     )}
                     {/* Program dari replacements */}
-                    {detailBeneficiary.replacements && detailBeneficiary.replacements.length > 0 ? (
-                      detailBeneficiary.replacements.map(rep => (
-                        <div key={rep.id} className="flex items-center gap-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                            {rep.program_detail?.title || "Unknown Program"}
-                          </span>
-                          <span className="text-[10px] text-slate-400">({rep.date_replaced})</span>
-                        </div>
-                      ))
-                    ) : (
-                      !detailBeneficiary.program_detail && <p className="text-sm font-medium text-slate-400">No program assigned</p>
-                    )}
+                    {detailBeneficiary.replacements &&
+                    detailBeneficiary.replacements.length > 0
+                      ? detailBeneficiary.replacements.map((rep) => (
+                          <div key={rep.id} className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                              {rep.program_detail?.title || "Unknown Program"}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              ({rep.date_replaced})
+                            </span>
+                          </div>
+                        ))
+                      : !detailBeneficiary.program_detail && (
+                          <p className="text-sm font-medium text-slate-400">
+                            No program assigned
+                          </p>
+                        )}
                   </div>
                   {canManage && (
                     <button
@@ -880,7 +896,9 @@ const Beneficiaries = () => {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
           <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Tambah Program</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                Tambah Program
+              </h3>
               <button
                 onClick={() => setIsReplacementModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold"
@@ -915,7 +933,9 @@ const Beneficiaries = () => {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Tanggal Mulai Program</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                    Tanggal Mulai Program
+                  </label>
                   <input
                     type="date"
                     required
