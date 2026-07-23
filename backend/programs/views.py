@@ -28,7 +28,9 @@ class DocumentationViewSet(viewsets.ModelViewSet):
         return Documentation.objects.filter(program__isnull=True).order_by('-uploaded_at')
 
     def get_permissions(self):
-        return [IsAuthenticated(), IsStaffLapangan()]
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsStaffLapangan()]
+        return [IsAuthenticated()]
 
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)

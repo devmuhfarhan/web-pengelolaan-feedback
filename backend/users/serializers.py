@@ -55,10 +55,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if not value:
-            raise serializers.ValidationError("Email tidak boleh kosong.")
+            raise serializers.ValidationError("Email cannot be empty.")
         # Cek keunikan email secara case-insensitive
         if User.objects.filter(email__iexact=value).exists() or User.objects.filter(username__iexact=value).exists():
-            raise serializers.ValidationError("Email ini sudah terdaftar.")
+            raise serializers.ValidationError("This email is already registered.")
         return value
 
 

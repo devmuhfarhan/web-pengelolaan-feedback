@@ -45,9 +45,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const BACKEND_URL = "http://127.0.0.1:8000";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 const maskEmail = (email, username) => {
   if (!email) return "";
   if (

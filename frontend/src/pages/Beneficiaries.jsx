@@ -669,7 +669,7 @@ const Beneficiaries = () => {
                       }}
                       className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 border border-primary/30 hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all"
                     >
-                      + Add Program
+                      {canEditDelete ? "+ Add Program" : "+ Add Replacement Date"}
                     </button>
                   )}
                 </div>
@@ -897,7 +897,7 @@ const Beneficiaries = () => {
           <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                Tambah Program
+                {canEditDelete ? "Add Program / Replacement" : "Add Replacement Date"}
               </h3>
               <button
                 onClick={() => setIsReplacementModalOpen(false)}
@@ -909,36 +909,38 @@ const Beneficiaries = () => {
 
             <form onSubmit={handleReplacementSubmit}>
               <div className="p-6 space-y-4">
+                {canEditDelete && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      Program
+                    </label>
+                    <select
+                      required
+                      value={replacementData.program}
+                      onChange={(e) =>
+                        setReplacementData({
+                          ...replacementData,
+                          program: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
+                    >
+                      <option value="">Select Program</option>
+                      {programs.map((prog) => (
+                        <option key={prog.id} value={prog.id.toString()}>
+                          {prog.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                    Program
-                  </label>
-                  <select
-                    required
-                    value={replacementData.program}
-                    onChange={(e) =>
-                      setReplacementData({
-                        ...replacementData,
-                        program: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-955 focus:bg-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100"
-                  >
-                    <option value="">Select Program</option>
-                    {programs.map((prog) => (
-                      <option key={prog.id} value={prog.id.toString()}>
-                        {prog.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                    Tanggal Mulai Program
+                    {canEditDelete ? "Start Date" : "Replacement Date"}
                   </label>
                   <input
                     type="date"
-                    required
+                    required={!canEditDelete}
                     value={replacementData.date_replaced}
                     onChange={(e) =>
                       setReplacementData({
